@@ -129,7 +129,7 @@ class Solution:
         return True
 
     def getApplicant(self, r, d, s, t):
-        """ 差分数组, 大致90%超时, 时间复杂度N * logN, 应该是最优解了, 但是目前没有AC, 翻译成C++后AC通过 """
+        """ 二分 + 差分数组, 大致90%超时, 时间复杂度N * logN, 应该是最优解了, 但是目前没有AC, 翻译成C++后AC通过 """
         size = len(r)
         sum_ = [0] * (size + 1)
         f = [0] * (size + 1)
