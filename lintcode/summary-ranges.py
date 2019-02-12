@@ -23,7 +23,6 @@ class Solution:
     def summaryRanges(self, nums):
         if not nums:
             return []
-        nums.sort()
         start = end = None
         ans = []
         for idx, v in enumerate(nums + nums[:1]):
