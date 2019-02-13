@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-装饰器和函数
+装饰器-函数装饰函数, 最常见
 """
 
 from time import sleep
@@ -12,12 +12,12 @@ from datetime import datetime
 # 无参数的装饰器
 # 利用装饰器记录job函数的执行时间
 def record_runtime(f):
-    def decorator(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         start = datetime.now().timestamp()
         r = f(*args, **kwargs)
         print('run func=%s run time = %s s' % (f.__name__, datetime.now().timestamp() - start))
         return r
-    return decorator
+    return wrapper
 
 
 # 等价于 job=record_runtime(job)
@@ -38,13 +38,13 @@ print(job(1, 2))
 # 加个开关, 控制是否打印运行时间的装饰器
 def record_runtime(is_print: bool=True):
     def record_runtime_(f):
-        def decorator(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             start = datetime.now().timestamp()
             r = f(*args, **kwargs)
             if is_print:
                 print('run func=%s run time = %s s' % (f.__name__, datetime.now().timestamp() - start))
             return r
-        return decorator
+        return wrapper
     return record_runtime_
 
 
