@@ -37,6 +37,7 @@ class Solution:
     def minNumber(self, nums):
         cmp = lambda x, y: -1 if x + y < y + x else 1
         nums = sorted(map(str, nums), key=cmp_to_key(cmp))
-        return ''.join(dropwhile(lambda _: _ == '0', nums))
+        ans = ''.join(dropwhile(lambda _: _ == '0', nums))
+        return ans if ans else '0'
 
 print(Solution().minNumber([1, 32, 2, 1, 0]))
