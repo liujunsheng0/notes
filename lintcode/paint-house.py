@@ -47,6 +47,7 @@ class Solution:
     @param costs: n x k cost matrix
     @return: an integer, the minimum cost to paint all houses
     """
+
     def minCostII_(self, costs):
         """ 超时 """
         if len(costs) < 1:
@@ -70,5 +71,7 @@ class Solution:
         # end for
         return min(costs[-1])
 
+l = [[1, 5, 6], [14, 15, 5], [4, 3, 3], [15, 15, 9], [9, 2, 7],
+     [6, 5, 7], [19, 4, 4], [6, 13, 3], [8, 16, 20], [18, 7, 9]]
 
-print(Solution().minCostII([[1,5,6],[14,15,5],[4,3,3],[15,15,9],[9,2,7],[6,5,7],[19,4,4],[6,13,3],[8,16,20],[18,7,9]]))
+print(Solution().minCostII(l))
