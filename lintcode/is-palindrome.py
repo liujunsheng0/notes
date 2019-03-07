@@ -10,5 +10,13 @@ class Solution(object):
     def is_palindrome(self, n):
         return int(''.join(list(reversed(str(n))))) == n
 
+    def is_palindrome2(self, n):
+        cur = n
+        reverse = 0
+        while cur > 0:
+            reverse = reverse * 10 + cur % 10
+            cur //= 10
+        # end while
+        return reverse == n
 
-print(Solution().is_palindrome(2221222))
+print(Solution().is_palindrome2(21))
