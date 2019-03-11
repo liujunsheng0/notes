@@ -263,6 +263,7 @@ class series(object):
         print(s.str.contains('_c', na='', regex=False, case=False))
         # 正则表达式
         print(s.str.findall('[a-z]'))
+        print(s.str[:2])
 
     def sort_index(self):
         """在排序时，任何缺失值默认都会被放到Series的末尾(不管是升序还是降序)"""
@@ -335,8 +336,8 @@ if __name__ == '__main__':
     # o.null()
     # o.reindex()
     # o.replace()
-    # o.string()
-    o.tolist()
+    o.string()
+    # o.tolist()
     # o.to_datetime()
     # o.take()
     # o.uniques()
