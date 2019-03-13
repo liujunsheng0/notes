@@ -2,3 +2,4 @@
 *.idea
 lintcode/test.py
 cmake-build-debug
+data

@@ -34,7 +34,4 @@ void fatal(const char* format, ...) NORETURN;
 // 命令行参数使用方面的错误
 void usageErr(const char* format, ...) NORETURN;
 
-// 针对特定程序的命令行参数错误
-void cmdLineErr(const char* format, ...) NORETURN;
-
 #endif //LINUX_PROGRAMMING_INTERFACE_ERROR_FUNCTION_H
