@@ -18,7 +18,6 @@
 
 typedef enum {FALSE, TRUE} Boolean;
 
-#define min(x, y) ((m) < (n) ? (m): (n))
-#define max(x, y) ((m) < (n) ? (n): (m))
+typedef unsigned int uint;
 
 #endif  // ifndef HEADER_H

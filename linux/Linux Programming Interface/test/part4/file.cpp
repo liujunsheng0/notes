@@ -13,14 +13,14 @@
 #include <unistd.h>
 #include <fcntl.h>       // 包含了读,写,关闭文件等操作的文件
 
-#include "header.h"
+//#include "header.h"
 #include "error_functions.h"
 
 using namespace std;
 
 
 #ifndef BUF_SIZE
-#define BUF_SIZE 32
+#define BUF_SIZE 1024
 #endif
 
 // 文件描述符
@@ -32,27 +32,30 @@ void file_descriptor() {
  * 测试IO操作的四个主要系统调用
  * #include <unistd.h>
  * off_t lseek(int fd, off_t offset, int whence)
- * offset: 便宜的字节数
+ * offset: 偏移的字节数
  * whence: SEEK_SET  从文件开始
  *         SEEK_CUR  从当前位置开始
  *         SEEK_END  将文件偏移设置为起始于文件尾部的offset个字节, 也就是说offset从文件的最后一个字节之后的下一个字节算起
  */
-void system_call_file_io() {
-    string filename = "../main.cpp";
-    int fd = open(filename.data(), O_RDONLY); // 文件名, 文件打开方式, 返回文件描述符, 错误返回-1, 详细错误见errno
+
+int open_file(string filename, int open_flag) {
+    int fd = open(filename.data(), open_flag); // 文件名, 文件打开方式, 返回文件描述符, 错误返回-1, 详细错误见errno
     if (fd == -1) {
         errExit("open file: %s error", filename.data());
     }
     printf("open file: %s success, fd=%d\n", filename.data(), fd);
+    return fd;
+}
 
+void read_file(int fd) {
     char buf[BUF_SIZE + 1];  // 留一个字节置‘/0’
     buf[BUF_SIZE] = '\0';
-    while (TRUE) {
+    while (true) {
         ssize_t num_read = read(fd, buf, BUF_SIZE);   // 返回读取的字节数量, 文件结束返回0, 错误返回-1
         if (num_read < BUF_SIZE) {
             buf[num_read] = '\0';
         }
-//         lseek(fd, 1, SEEK_CUR); //  文件偏移一个字节
+        // lseek(fd, 1, SEEK_CUR); //  文件偏移一个字节
         if (num_read == 0) {
             break;
         }
@@ -61,67 +64,88 @@ void system_call_file_io() {
         }
         cout<<"num_read="<<num_read<<" buf="<<buf<<endl;
     }
+}
+
+void lseek_file(int fd, int offset, int whence) {
+    if (lseek(fd, offset, whence)  == -1) {
+        errExit("lseek error");
+    }
+}
+
+void write_file(int fd, char* buf, size_t buf_size) {
+    int write_num = write(fd, buf, (unsigned int)buf_size);
+    cout<<"write bytes= "<<write_num<<endl;
+}
+
+void close_file(int fd, string filename) {
     if (close(fd) != 0) {
         errExit("close file:%s error", filename.data());
     }
 }
 
+void system_call_file_io() {
+    string filename = "../main.cpp";
+    int fd = open_file(filename, O_RDONLY);
+    read_file(fd);
+    close_file(fd, filename);
+
+}
+
 /* 文件空洞 https://blog.csdn.net/clamercoder/article/details/38361815
- *        https://blog.csdn.net/shenlanzifa/article/details/44016537
+ *          https://blog.csdn.net/shenlanzifa/article/details/44016537
  *  文件偏移量跨越了文件结尾, 执行read操作返回0, 执行write操作是可以写入数据的.
  *  从文件结尾到新写入数据间的这段空间称为文件空洞, 从编程角度来看, 文件空洞中存在字节, 只不过是空字节.
- *  文件空洞不占用任何磁盘空间, 直至像文件空洞中写入数据时, 系统才会为止分配空间.
+ *  文件空洞不占用任何磁盘空间, 直至像文件空洞后面的偏移写入数据, 系统才会为其分配空间.
  *
+ *  空洞文件的特点: offset > 实际文件大小
+ *  作用: 如空洞文件作用很大, 例如迅雷下载文件, 在未下载完成时就已经占据了全部文件大小的空间, 这时候就是空洞文件.
+ *  ls -l file        查看文件逻辑大小
+ *  du -c file        查看文件实际占用的存储块多少
+ *  od -c file        查看文件存储的内容
  */
 
 void file_hole() {
-    string file1 = "../data/file_hole1.txt";
-    string file2 = "../data/file_hole2.txt";
-    int fd1 = open(file1.data(), O_WRONLY | O_CREAT);
-    int fd2 = open(file2.data(), O_WRONLY | O_CREAT);
-    int offset = 102400000000;
+    string file1 = "../data/file_hole_write.txt";
+    string file2 = "../data/file_hole_no_write.txt";
+    string file3 = "../data/file_no_hole.txt";
+
+    int fd1 = open_file(file1, O_WRONLY | O_CREAT);
+    int fd2 = open_file(file2, O_WRONLY | O_CREAT) ;
+    int fd3 = open_file(file3, O_WRONLY | O_CREAT);
+    long offset = 1024 * 1024 * 1;
     lseek(fd1, offset, SEEK_SET);
     lseek(fd2, offset, SEEK_SET);
 
     char buf1[] = "123456789";
-    int write_num = write(fd1, buf1, strlen(buf1));
-    cout<<"write_num = "<<write_num<<endl;
-
-    if (close(fd1) != 0) {
-        errExit("close file:%s error", file1.data());
-    }
-    if (close(fd2) != 0) {
-        errExit("close file:%s error", file1.data());
-    }
+    write_file(fd1, buf1, (unsigned int)(strlen(buf1)));
+    write_file(fd3, buf1, (unsigned int)(strlen(buf1)));
+    close(fd1);
+    close(fd2);
+    close(fd3);
 }
 
+int get_file_bytes(string filename) {
+    FILE* fd = fopen(filename.data(), "rb");
+    if (fd == NULL) {
+        errExit("open file: %s error", filename.data());
+    }
+    fseek(fd, 0, SEEK_END);
+    fclose(fd);
+    return ftell(fd);
+}
 
 void read_file_hole() {
-    string file1 = "../data/file_hole1.txt";
-    string file2 = "../data/file_hole2.txt";
-    int fd = open(file1.data(), O_RDONLY);
-    char buf[BUF_SIZE + 1];  // 留一个字节置‘/0’
-    buf[BUF_SIZE] = '\0';
-
-    while (TRUE) {
-        ssize_t num_read = read(fd, buf, BUF_SIZE);
-        if (num_read > 0 and num_read < BUF_SIZE) {
-            buf[num_read] = '\0';
-        }
-        if (num_read == 0) {
-            break;
-        }
-        if (num_read == -1) {
-            break;
-        }
-        cout<<"num_read="<<num_read<<" buf="<<buf<<endl;
-    }
+    string file1 = "../data/file_hole_write.txt";
+    string file2 = "../data/file_hole_no_write.txt";
+    string file3 = "../data/file_no_hole.txt";
+    // size(字节数): f1=8192009, f2=0, f3=9
+    printf("size: f1=%d, f2=%d, f3=%d\n", get_file_bytes(file1), get_file_bytes(file2), get_file_bytes(file3));
 }
 
 int main() {
 //    file_descriptor();
 //    system_call_file_io();
-//    file_hole();
+    file_hole();
     read_file_hole();
     return 0;
 }
