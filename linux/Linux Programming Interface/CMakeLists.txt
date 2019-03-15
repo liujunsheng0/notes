@@ -13,3 +13,15 @@ add_executable(main main.cpp)
 # 第四章 通用IO模型
 set(4_FILE test/part4/file.cpp ${CPP_LIST})
 add_executable(4_file ${4_FILE})
+
+# 第五章 5.1
+set(5_1_FILE test/part5/bad_exclusive_open.cpp ${CPP_LIST} test/part5/practices.cpp)
+add_executable(5_1_bad_exclusive_open ${5_1_FILE})
+
+set(5_3_FILE test/part5/fcntl_test.cpp ${CPP_LIST})
+add_executable(5_3_fcntl ${5_3_FILE})
+
+
+set(5_PARCTICE_FILE test/part5/practices.cpp ${CPP_LIST})
+add_executable(5_practice ${5_PARCTICE_FILE})
+

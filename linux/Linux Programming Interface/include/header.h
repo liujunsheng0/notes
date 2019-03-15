@@ -8,7 +8,7 @@
 
 #include <sys/stat.h>    // unix/linux系统定义文件状态的文件, 里面的函数可以返回一个结构，里面包括文件的全部属性
 #include <sys/types.h>   // 基本系统数据类型
-#include <fcntl.h>       // 包含了读,写,关闭文件等操作的文件
+#include <fcntl.h>       // 包含了读,写,关闭文件等操作的文件, fcntl = file control
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>      // 系统调用原型方法, 定义了POSIX标准名称

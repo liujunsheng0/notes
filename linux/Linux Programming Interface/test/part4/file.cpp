@@ -36,6 +36,25 @@ void file_descriptor() {
  * whence: SEEK_SET  从文件开始
  *         SEEK_CUR  从当前位置开始
  *         SEEK_END  将文件偏移设置为起始于文件尾部的offset个字节, 也就是说offset从文件的最后一个字节之后的下一个字节算起
+ * open flags参数值:
+ *   O_RDONLY    以只读方式打开文件
+ *   O_WRONLY    以只写方式打开文件
+ *   O_RDWR      以读和写的方式打开文件
+ * 上面三个只能选择一个, 下面的可以合理的任意组合:
+
+ *   O_CREAT     打开文件, 如果文件不存在则建立文件
+ *   O_EXCL      与O_CREAT配合使用, 如果文件存在, 则open()失败
+ *
+ *   O_DIRECT      无缓存的输入/输出
+ *   O_DIRECTORY   如果参数非目录, 将返回错误
+ *   O_TRUNC     如果文件以及存在且未普通文件, 清空文件内容, 将其长度置为0 (覆盖), truncate(截断)
+ *   O_APPEND    在文件尾部追加数据, 确保多个进程对同一文件追加数据时, 不会覆盖彼此的数据
+ *   O_ASYNC       当I/O操作可行时, 产生信号通知进程, 仅对特定类型的文件有效, 如终端, socket
+ *   O_DSYNC       根据同步I/O数据完整性的完成要求来执行文件写操作
+ *   O_NONBLOCK    以非阻塞方式打开文件, 打开文件时可能阻塞, 如果未能立即打开文件, 返回错误; 成功后, 后续的IO操作也是非
+ *                 阻塞的, 若系统调用未能立即完成，则可能只会传输部分数据或失败
+ *   O_SYNC        以同步I/O方式打开文件
+ *
  */
 
 int open_file(string filename, int open_flag) {
