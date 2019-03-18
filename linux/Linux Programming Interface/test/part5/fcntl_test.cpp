@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <fcntl.h>
+#include <fcntl.h>  // fcntl = file control
 
 #include "error_functions.h"
 

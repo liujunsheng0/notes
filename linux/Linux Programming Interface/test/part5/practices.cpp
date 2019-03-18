@@ -12,15 +12,17 @@ void practice_2() {
     // 虽然偏移到了文件起点, 但是还是会写入到文件末尾
     // 设置了O_APPEND后，不管偏移到哪, 都会在文件末尾写数据
     // 即lseek对O_APPEND无效, 对READ有效
-    char buf[] = "1\n";
+    char buf[] = "1\n2\n";
 
     lseek(fd, 0, SEEK_SET);
     write(fd, buf, (unsigned int)strlen(buf));
-    read(fd, buf, 2);
+
+    buf[1] = '\0';
+    read(fd, buf, 1);
     printf("read1 = %s\n", buf);  // 1
 
     lseek(fd, 0, SEEK_SET);
-    read(fd, buf, 2);
+    read(fd, buf, 1);
     printf("read2 = %s\n", buf);  // 文件起始处内容
     if (close(fd) == -1) {
         errExit("close error");

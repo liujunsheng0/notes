@@ -5,7 +5,8 @@
  *   1       输出     STDOUT_FILENO          stdout
  *   2       错误     STDERR_FILENO          stderr
  *
- *   文件描述符的值为未使用的最小文件描述符
+ * 分配文件描述符的值为未使用的最小文件描述符
+ * 文件描述符: 文件描述符表中的索引，表中的值为文件指针
  */
 
 
@@ -13,7 +14,6 @@
 #include <unistd.h>
 #include <fcntl.h>       // 包含了读,写,关闭文件等操作的文件
 
-//#include "header.h"
 #include "error_functions.h"
 
 using namespace std;
@@ -41,15 +41,17 @@ void file_descriptor() {
  *   O_WRONLY    以只写方式打开文件
  *   O_RDWR      以读和写的方式打开文件
  * 上面三个只能选择一个, 下面的可以合理的任意组合:
+ *
+ *   O_APPEND    在文件尾部追加数据, 确保多个进程对同一文件追加数据时, 不会覆盖彼此的数据
+ *   O_ASYNC       当I/O操作可行时, 产生信号通知进程, 仅对特定类型的文件有效, 如终端, socket
 
- *   O_CREAT     打开文件, 如果文件不存在则建立文件
+ *   O_CREAT     打开文件, 如果文件不存在则建立文件(检查文件是否存在和创建文件属于一个原子操作)
  *   O_EXCL      与O_CREAT配合使用, 如果文件存在, 则open()失败
+ *
+ *   O_TRUNC     如果文件存在且为普通文件, 清空文件内容, 将其长度置为0 (覆盖), truncate(截断)
  *
  *   O_DIRECT      无缓存的输入/输出
  *   O_DIRECTORY   如果参数非目录, 将返回错误
- *   O_TRUNC     如果文件以及存在且未普通文件, 清空文件内容, 将其长度置为0 (覆盖), truncate(截断)
- *   O_APPEND    在文件尾部追加数据, 确保多个进程对同一文件追加数据时, 不会覆盖彼此的数据
- *   O_ASYNC       当I/O操作可行时, 产生信号通知进程, 仅对特定类型的文件有效, 如终端, socket
  *   O_DSYNC       根据同步I/O数据完整性的完成要求来执行文件写操作
  *   O_NONBLOCK    以非阻塞方式打开文件, 打开文件时可能阻塞, 如果未能立即打开文件, 返回错误; 成功后, 后续的IO操作也是非
  *                 阻塞的, 若系统调用未能立即完成，则可能只会传输部分数据或失败
@@ -58,6 +60,13 @@ void file_descriptor() {
  */
 
 int open_file(string filename, int open_flag) {
+    /*
+     * open(const char* filename, int flags, ...(mode_t mode))
+     * 成功: 返回文件描述符,未使用的文件描述符中的最小值
+     * 失败: 返回-1, errno置为相应的错误标志
+     * flags: 指定文件的访问模式
+     * mode: 指定文件的访问权限(如果未指定O_CREAT标志, 该参数可省略)
+     */
     int fd = open(filename.data(), open_flag); // 文件名, 文件打开方式, 返回文件描述符, 错误返回-1, 详细错误见errno
     if (fd == -1) {
         errExit("open file: %s error", filename.data());
@@ -67,7 +76,12 @@ int open_file(string filename, int open_flag) {
 }
 
 void read_file(int fd) {
-    char buf[BUF_SIZE + 1];  // 留一个字节置‘/0’
+    /*
+     * ssize_t read(int fd, void* buf, size_t buf_size)
+     * 成功: 返回读取的字节数, 如果遇到文件结束(EOF)返回0
+     * 失败: -1, errno置为相应的错误号
+     */
+    char buf[BUF_SIZE + 1];  // 留一个字节置'/0'
     buf[BUF_SIZE] = '\0';
     while (true) {
         ssize_t num_read = read(fd, buf, BUF_SIZE);   // 返回读取的字节数量, 文件结束返回0, 错误返回-1
@@ -86,17 +100,34 @@ void read_file(int fd) {
 }
 
 void lseek_file(int fd, int offset, int whence) {
+    /*
+     * off_t lseek(int fd, off_t offset, int whence)
+     * offset: 偏移的字节数
+     * whence: SEEK_SET  从文件开始
+     *         SEEK_CUR  从当前位置开始
+     *         SEEK_END  将文件偏移设置为起始于文件尾部的offset个字节, 也就是说offset从文件的最后一个字节之后的下一个字节算起
+     */
     if (lseek(fd, offset, whence)  == -1) {
         errExit("lseek error");
     }
 }
 
 void write_file(int fd, char* buf, size_t buf_size) {
+    /*
+     * ssize_t write(int fd, void* buf, size_t count)
+     * 成功: 返回写入的字节数
+     * 失败: -1, errno置为相应的错误号
+     * 如果写入的字节数小于buf_size, 可能是因为磁盘已满, 或者是进程资源对文件大小的限制
+     */
     int write_num = write(fd, buf, (unsigned int)buf_size);
     cout<<"write bytes= "<<write_num<<endl;
 }
 
 void close_file(int fd, string filename) {
+    /*
+     * int close(int fd)
+     * 成功: 0; 失败: -1
+     */
     if (close(fd) != 0) {
         errExit("close file:%s error", filename.data());
     }
@@ -143,7 +174,7 @@ void file_hole() {
     close(fd3);
 }
 
-int get_file_bytes(string filename) {
+long get_file_bytes(string filename) {
     FILE* fd = fopen(filename.data(), "rb");
     if (fd == NULL) {
         errExit("open file: %s error", filename.data());
@@ -158,7 +189,7 @@ void read_file_hole() {
     string file2 = "../data/file_hole_no_write.txt";
     string file3 = "../data/file_no_hole.txt";
     // size(字节数): f1=8192009, f2=0, f3=9
-    printf("size: f1=%d, f2=%d, f3=%d\n", get_file_bytes(file1), get_file_bytes(file2), get_file_bytes(file3));
+    printf("size: f1=%ld, f2=%ld, f3=%ld\n", get_file_bytes(file1), get_file_bytes(file2), get_file_bytes(file3));
 }
 
 int main() {
