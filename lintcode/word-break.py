@@ -11,7 +11,6 @@
 """
 
 
-# TODO:: 未AC
 class Solution:
     """
     @param: s: A string
@@ -23,10 +22,27 @@ class Solution:
         if not s:
             return True
         for i in dicts:
-            if s.startswith(i):
-                if self.wordBreak(s[len(i):], dicts):
-                    return True
+            if s.startswith(i) and self.wordBreak(s[len(i):], dicts):
+                return True
         return False
 
+    def wordBreak2(self, s, dicts):
+        if not s:
+            return True
+        size = len(s)
+        # dp[i] == True 表示 s中0~i是可以由dicts中的单词组成的
+        dp = [False] * (size + 1)
+        dp[0] = True
+        for idx, v in enumerate(dp):
+            if not v:
+                continue
+            for w in dicts:
+                tmp = len(w)
+                if w == s[idx: idx + tmp]:
+                    dp[idx + tmp] = True
+            # end for
+        # end for
+        return dp[-1]
 
 print(Solution().wordBreak("abcdadada", ["a", "d", "c", "b"]))
+print(Solution().wordBreak2("abcdadada", ["a", "d", "c", "b"]))
