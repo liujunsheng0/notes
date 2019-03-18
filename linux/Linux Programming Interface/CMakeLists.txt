@@ -27,3 +27,6 @@ add_executable(5_copy_file_descriptor ${5_PARCTICE_FILE})
 set(5_PARCTICE_FILE test/part5/practices.cpp ${CPP_LIST})
 add_executable(5_practice ${5_PARCTICE_FILE})
 
+# 第六章
+set(6_1_FILE test/part6/6_2.cpp)
+add_executable(6_2_pid_and_ppid ${6_1_FILE})
