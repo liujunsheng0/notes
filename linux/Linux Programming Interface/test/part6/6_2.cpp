@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 /*
  * 每个进程都有一个进程号(PID=process id), 进程号是一个正数, 用以唯一标识系统中的某个进程.
@@ -30,7 +30,24 @@ int pid() {
  * register 寄存器
  */
 
+
+/*
+ * 命令行参数
+ * 通过Linux系统专有的/proc/PID/cmdline可以读取进程的命令行参数, 每个参数都以空字节终止
+ */
+void env() {
+    /*
+     *  char * getenv(const char *varname) 存在返回对应的值, 不存在返回NULL
+     */
+    char* env_name = (char *) "PATH";
+    char* not_exist_env_name = (char*) "NOT_EXIST_VAR_NAME";
+    printf("env var %s=%s\n", env_name, getenv(env_name)); // 获取环境变量的值
+    printf("env var %s=%s\n", not_exist_env_name, getenv(not_exist_env_name)); // 获取环境变量的值
+}
+
+
 int main() {
-    pid();
+//    pid();
+    env();
     return 0;
 }

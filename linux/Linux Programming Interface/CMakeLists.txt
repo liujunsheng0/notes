@@ -30,3 +30,7 @@ add_executable(5_practice ${5_PARCTICE_FILE})
 # 第六章
 set(6_1_FILE test/part6/6_2.cpp)
 add_executable(6_2_pid_and_ppid ${6_1_FILE})
+
+# 第七章
+set(7_1_FILE test/part7/7_1.cpp)
+add_executable(7_1_memory ${7_1_FILE})
