@@ -34,3 +34,15 @@ add_executable(6_2_pid_and_ppid ${6_1_FILE})
 # 第七章
 set(7_1_FILE test/part7/7_1.cpp)
 add_executable(7_1_memory ${7_1_FILE})
+
+# 第10章
+set(10_FILE test/part10/10.cpp)
+add_executable(10_time ${10_FILE})
+
+# 第10章
+set(12_FILE test/part12/12.cpp)
+add_executable(12_proc ${12_FILE})
+
+# 第13章
+set(13_FILE test/part13/13.cpp ${CPP_LIST})
+add_executable(13_cache_io ${13_FILE})
