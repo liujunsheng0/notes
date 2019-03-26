@@ -50,3 +50,6 @@ add_executable(13_cache_io ${13_FILE})
 # 第15章
 set(15_FILE test/part15/15.cpp ${CPP_LIST})
 add_executable(15_file_attr ${15_FILE})
+
+set(19_FILE test/part19/19.cpp ${CPP_LIST})
+add_executable(19_inotify ${19_FILE})
