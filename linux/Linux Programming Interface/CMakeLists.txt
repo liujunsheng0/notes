@@ -55,3 +55,5 @@ set(19_FILE test/part19/19.cpp ${CPP_LIST})
 add_executable(19_inotify ${19_FILE})
 
 add_executable(20_singal test/part20-22/20.cpp)
+
+add_executable(23_interval_time test/part23/23.cpp)
