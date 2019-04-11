@@ -46,3 +46,14 @@ add_executable(12_proc ${12_FILE})
 # 第13章
 set(13_FILE test/part13/13.cpp ${CPP_LIST})
 add_executable(13_cache_io ${13_FILE})
+
+# 第15章
+set(15_FILE test/part15/15.cpp ${CPP_LIST})
+add_executable(15_file_attr ${15_FILE})
+
+set(19_FILE test/part19/19.cpp ${CPP_LIST})
+add_executable(19_inotify ${19_FILE})
+
+add_executable(20_singal test/part20-22/20.cpp)
+
+add_executable(23_interval_time test/part23/23.cpp)
