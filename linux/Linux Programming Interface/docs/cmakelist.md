@@ -33,11 +33,15 @@ add_library(demo ${SRC_LIST}
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
 			　　　　　${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+# 设置库路径
+LINK_DIRECTORIES(...)
+库文件存放的目录，在程序连接库文件的时候要在这些目录下寻找对应的库文件
+
 # 指定链接多个库
 target_link_libraries(demo 
 					  ${CMAKE_CURRENT_SOURCE_DIR}/libs/libface.a
 					  boost_system.a
 					  boost_thread)
-
+demo 依赖指定的库文件
 ```
 
