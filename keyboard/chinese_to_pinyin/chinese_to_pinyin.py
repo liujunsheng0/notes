@@ -217,7 +217,7 @@ class PinyinHelper(object):
         return ''.join([cls.MARKED_VOWEL_TO_UNMARKED.get(c, c) for c in pinyin])
 
     @classmethod
-    def format_pinyin(cls, pinyin, pinyinFormat=PinyinFormat.WITH_TONE_MARK) -> str:
+    def format_pinyin(cls, pinyin, pinyinFormat=PinyinFormat.WITHOUT_TONE) -> str:
         """
         将带声调的拼音格式化为相应格式的拼音
         :param pinyin:        拼音
@@ -237,7 +237,7 @@ class PinyinHelper(object):
         return pinyin
 
     @classmethod
-    def convert_to_pinyin_from_char(cls, chinese_char, pinyinFormat=PinyinFormat.WITH_TONE_MARK) -> str:
+    def convert_to_pinyin_from_char(cls, chinese_char, pinyinFormat=PinyinFormat.WITHOUT_TONE) -> str:
         """
         将单个汉字转化为对应的拼音
         :param chinese_char:  单个汉字
@@ -343,7 +343,23 @@ class ChineseHelper(object):
         return ''.join([cls.FAN2JIAN_TABLE.get(c, c) for c in s])
 
 
+def __help():
+    """生成不带声调的拼音文件"""
+    from itertools import chain
+    d1 = PinyinResource.get_pinyin_resource()
+    d2 = PinyinResource.get_phrase_pinyin_resource()
+    pinyins = []
+    for i in chain(d1.values(), d2.values()):
+        pinyins.extend(i)
+    pinyins = list(set([PinyinHelper.format_pinyin(i) + '\n' for i in pinyins if i and all(['a' <= c <= 'z' for c in i])]))
+    pinyins.sort()
+    with open("chinese_to_pinyin_data/pinyins.txt", 'w', encoding='utf-8') as f:
+        f.writelines(pinyins)
+
+
 if __name__ == '__main__':
-    print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女"))
-    print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女", PinyinFormat.WITH_TONE_MARK))
-    print(ChineseHelper.convert_to_traditional_chinese("你 丑 啊 美 女").encode("utf-8"))
+    print(PinyinHelper.format_pinyin('à'))
+    # print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女"))
+    # print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女", PinyinFormat.WITH_TONE_MARK))
+    # print(ChineseHelper.convert_to_traditional_chinese("你 丑 啊 美 女").encode("utf-8"))
+    __help()
