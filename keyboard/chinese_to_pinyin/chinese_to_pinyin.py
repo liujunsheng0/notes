@@ -351,7 +351,8 @@ def __help():
     pinyins = []
     for i in chain(d1.values(), d2.values()):
         pinyins.extend(i)
-    pinyins = list(set([PinyinHelper.format_pinyin(i) + '\n' for i in pinyins if i and all(['a' <= c <= 'z' for c in i])]))
+    pinyins = list(set([PinyinHelper.format_pinyin(i, PinyinFormat.WITHOUT_TONE) for i in pinyins]))
+    pinyins = [i + '\n' for i in pinyins if i and all(['a' <= c <= 'z' for c in i])]
     pinyins.sort()
     with open("chinese_to_pinyin_data/pinyins.txt", 'w', encoding='utf-8') as f:
         f.writelines(pinyins)
