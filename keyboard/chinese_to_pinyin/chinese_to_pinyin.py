@@ -188,7 +188,7 @@ class PinyinHelper(object):
             cls.__inited = True
 
     @classmethod
-    def convert_with_tone_number(cls, pinyin) -> str:
+    def convert_to_with_tone_number(cls, pinyin) -> str:
         """
         将带声调格式的拼音转换为数字代表声调格式的拼音, 如hà -> ha4
         :param pinyin: 带声调的拼音
@@ -206,7 +206,7 @@ class PinyinHelper(object):
         return ans
 
     @classmethod
-    def convert_with_tone(cls, pinyin) -> str:
+    def convert_to_with_tone(cls, pinyin) -> str:
         """
         将带声调格式的拼音转换为不带声调的拼音, 如hà -> ha
         :param pinyin: 带声调的拼音
@@ -231,9 +231,9 @@ class PinyinHelper(object):
         if pinyinFormat == PinyinFormat.WITH_TONE_MARK:
             return pinyin
         if pinyinFormat == PinyinFormat.WITH_TONE_NUMBER:
-            return cls.convert_with_tone_number(pinyin)
+            return cls.convert_to_with_tone_number(pinyin)
         if pinyinFormat == PinyinFormat.WITHOUT_TONE:
-            return cls.convert_with_tone(pinyin)
+            return cls.convert_to_with_tone(pinyin)
         return pinyin
 
     @classmethod
