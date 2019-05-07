@@ -1,0 +1,3 @@
+[submodule "keyboard/nlp_data"]
+	path = keyboard/nlp_data
+	url = git@github.com:fighting41love/funNLP.git
