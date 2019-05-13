@@ -237,7 +237,7 @@ class PinyinHelper(object):
         return pinyin
 
     @classmethod
-    def convert_to_pinyin_from_char(cls, chinese_char, pinyinFormat=PinyinFormat.WITHOUT_TONE) -> str:
+    def convert_to_pinyin_from_char(cls, chinese_char, pinyinFormat=PinyinFormat.WITHOUT_TONE) -> list:
         """
         将单个汉字转化为对应的拼音
         :param chinese_char:  单个汉字
@@ -248,8 +248,8 @@ class PinyinHelper(object):
         :return: 返回汉字对应的拼音
         """
         cls.init()
-        chinese_char = convert_to_str(chinese_char)
-        return ''.join([cls.format_pinyin(i, pinyinFormat) for i in cls.PINYIN_TABLE.get(chinese_char, [chinese_char])])
+        chinese_char = convert_to_str(chinese_char.strip())
+        return [cls.format_pinyin(i, pinyinFormat) for i in cls.PINYIN_TABLE.get(chinese_char, [chinese_char])]
 
     @classmethod
     def convert_to_pinyin_from_sentence(cls, chinese_chars, pinyinFormat=PinyinFormat.WITHOUT_TONE, segment=None) \
@@ -292,7 +292,10 @@ class PinyinHelper(object):
             return [cls.format_pinyin(pinyin, pinyinFormat) for pinyin in result]
 
         data = [chinese_chars] if not segment else segment(chinese_chars)
-        return ''.join([''.join(_help(i)) for i in data])
+        ans = []
+        for i in data:
+            ans += _help(i)
+        return ans
 
     @classmethod
     def add_phrase_pinyin(cls, w, pinyinList):
@@ -363,4 +366,6 @@ if __name__ == '__main__':
     # print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女"))
     # print(PinyinHelper.convert_to_pinyin_from_sentence("你 好 啊 美 女", PinyinFormat.WITH_TONE_MARK))
     # print(ChineseHelper.convert_to_traditional_chinese("你 丑 啊 美 女").encode("utf-8"))
-    __help()
+    # __help()
+    print(PinyinHelper.convert_to_pinyin_from_char("你 "))
+    print(PinyinHelper.convert_to_pinyin_from_sentence("你好啊"))
