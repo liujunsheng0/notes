@@ -90,6 +90,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "error_functions.h"
 
 /* Display information from inotify_event structure */

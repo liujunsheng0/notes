@@ -13,6 +13,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>       // 包含了读,写,关闭文件等操作的文件
+#include <cstring>
 
 #include "error_functions.h"
 
