@@ -108,7 +108,7 @@ void reentrant() {   // reentrant: 可重入
  *          1. poll(), ppoll(), select(), pselect()多路复用调用
  *          2. epoll_wait(), io_getevents()...
  *          3. 对inotify文件描述符发起的read调用
- *          4. 讲进程挂起的系统调用sleep(), nanosleep(), clock_nanosleep().
+ *          4. 将进程挂起的系统调用sleep(), nanosleep(), clock_nanosleep().
  *          5. 等待信号的系统调用: pause(), sigsuspend(), ssigwaitinfo()....
  *
  */

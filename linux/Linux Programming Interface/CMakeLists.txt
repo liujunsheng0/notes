@@ -59,3 +59,4 @@ add_executable(21_singal test/part20-22/21.cpp)
 target_link_libraries(21_singal crypt)
 
 add_executable(23_interval_time test/part23/23.cpp)
+target_link_libraries(23_interval_time rt)
