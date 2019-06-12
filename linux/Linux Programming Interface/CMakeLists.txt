@@ -63,4 +63,6 @@ target_link_libraries(23_interval_time rt)
 
 add_executable(24_process_create test/part24-28/24.cpp)
 add_executable(25_process_exit test/part24-28/25.cpp)
-add_executable(25_process_monitor test/part24-28/26.cpp)
+add_executable(26_process_monitor test/part24-28/26.cpp)
+add_executable(27_process_run test/part24-28/27.cpp)
+
