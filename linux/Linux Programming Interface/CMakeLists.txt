@@ -66,3 +66,6 @@ add_executable(25_process_exit test/part24-28/25.cpp)
 add_executable(26_process_monitor test/part24-28/26.cpp)
 add_executable(27_process_run test/part24-28/27.cpp)
 
+add_executable(29_thread test/part29-33/29.cpp)
+target_link_libraries(29_thread pthread)
+
