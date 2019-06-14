@@ -68,4 +68,5 @@ add_executable(27_process_run test/part24-28/27.cpp)
 
 add_executable(29_thread test/part29-33/29.cpp)
 target_link_libraries(29_thread pthread)
-
+add_executable(30_thread_sync test/part29-33/30.cpp)
+target_link_libraries(30_thread_sync pthread)
