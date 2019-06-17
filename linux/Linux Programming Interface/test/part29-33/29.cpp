@@ -83,7 +83,7 @@ void exit_(const std::string &msg) {
  * 等待指定线程终止, 如果线程已经返回, 立即返回
  * int pthread_join(pthread_t thread, void **retval);
  *      return: 0 on success, 正整数 on error
- *      retval: 返回线程返回值的拷贝, 即return或pthread_exit()所指定的值
+ *      retval: 返回线程返回值的拷贝, 即return或pthread_exit()所指定的值, 如果线程取消返回PTHREAD_CANCELED
  *      notice: 如果创建了线程后, 未使用pthread_join, 线程终止时会产生僵尸线程, 若僵尸线程积累数过多, 进程将无法创建新的线程
  *
  * 线程的分离, 默认情况下, 线程是可连接的(joinable), 即当线程退出时, 其他线程可以通过调用pthread_join()来获取其返回值.
