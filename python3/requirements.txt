@@ -1,2 +1,4 @@
 cachetools
 pandas
+pytest
+nose
