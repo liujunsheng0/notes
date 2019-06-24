@@ -4,8 +4,9 @@
 """
 属性查找
 如果obj是某个类的实例, 那么obj.name(等价于getattr(obj,'name')), 首先调用__getattribute__, 如果类定义了__getattr__方法, 
-那么在__getattribute__抛出 AttributeError 的时候就会调用到__getattr__,  对于描述符(实现了__get__方法的实例)的调用, 
-则是发生在__getattribute__内部的。
+那么在__getattribute__抛出 AttributeError 的时候就会调用到__getattr__.
+
+对于描述符(实现了__get__方法的实例)的调用, 发生在__getattribute__内部的.
 
 so, obj = Class(), 那么obj.attr查找顺序如下：
     (1) 如果 attr 在Class或其基类的__dict__(类属性)中, 且 attr 是data descriptor(数据描述符), 那么调用其__get__方法, 否则
@@ -38,43 +39,33 @@ class NonDataDescriptor(object):
         self.v = v
 
     def __get__(self, item, *args, **kwargs):
-        return self.__dict__.get(item, None)
+        return self.v
 
 
-class Base(object):
-    base = 'base'
-    data_descriptor1 = DataDescriptor('base_data_descriptor1')
-    data_descriptor2 = DataDescriptor('base_data_descriptor2')
-    non_data_descriptor = NonDataDescriptor('base_non_data_descriptor')
-
-
-class Derive(Base):
-    a = 'class_a'
-    b = 'class_b'
-    data_descriptor1 = DataDescriptor('derive_data_descriptor1')
-    non_data_descriptor = NonDataDescriptor('derive_non_data_descriptor')
+class Derive(object):
+    a = 'a'
+    data_descriptor = DataDescriptor('data_descriptor')
+    non_data_descriptor = NonDataDescriptor('non_data_descriptor')
 
     def __init__(self):
         self.a = 1
-        # self.data_descriptor = 'self.data_descriptor1'
-        # self.data_descriptor2 = 'self.data_descriptor2'
-        self.non_data_descriptor = 'self.derive_non_data_descriptor'
 
     def __getattribute__(self, item, *args, **kwargs):
-        print('__getattribute__', item)
-        return object.__getattribute__(self, item, *args, **kwargs)
+        print('__getattribute__', "%-20s" % item, end=" ")
+        return super().__getattribute__(item, *args, **kwargs)
 
     def __getattr__(self, item, *args, **kwargs):
-        print('__getattr__', item)
+        """
+        usage: 获取不存在的属性时, 不报错, 返回None
+        如果类定义了__getattr__方法, 那么在__getattribute__抛出 AttributeError 的时候就会调用到__getattr__
+        """
+        print('__getattr__', "%-20s" % item, end=" ")
         return None
+
 
 if __name__ == '__main__':
     obj = Derive()
     print(obj.a)
     print(obj.b)
-    print(obj.base)
-    print(obj.data_descriptor1)
-    print(obj.data_descriptor2)
+    print(obj.data_descriptor)
     print(obj.non_data_descriptor)
-    print(obj.not_in_obj)
-    print(getattr(obj, 'not_in_obj'))

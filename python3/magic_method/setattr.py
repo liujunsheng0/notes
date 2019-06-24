@@ -20,7 +20,7 @@ class Descriptor(object):
         return self.v
 
     def __set__(self, instance, value, *args, **kwargs):
-        print('__set__', instance.__class__.__name__, value)
+        print('__set__', instance.__class__.__name__, value, end=" ")
         self.v = value
 
 
@@ -28,10 +28,11 @@ class Base1(object):
     descriptor = Descriptor('')
 
     def __setattr__(self, key, value):
-        print('__setattr__ %s->%s' % (key, value))
+        print('__setattr__  %s->%s' % (key, value), end=" ")
         # 如果是数据描述符, object.__setattr__() 还会继续调用其 __set__方法
         super().__setattr__(key, value)
         # self.__dict__[key] = value
+        print()
 
 
 class Base2(object):
@@ -40,9 +41,9 @@ class Base2(object):
 
 if __name__ == '__main__':
     obj1 = Base1()
-    obj1.descriptor = 'obj1'
+    obj1.descriptor = 'v1'
     obj2 = Base2()
-    obj2.descriptor = 'obj2'
+    obj2.descriptor = 'v2'
     print(obj1.descriptor, obj2.descriptor)
 
 
