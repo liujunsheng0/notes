@@ -34,21 +34,32 @@ update-rc.d redis-server defaults
 
 参数	
 
-| 配置名    | 值                              | 说明                      |
-| --------- | ------------------------------- | ------------------------- |
-| daemonize | yes                             | 使redis以守护进程模式运行 |
-| pidfile   | /var/run/redis/redis-server.pid | 设置redis的PID文件位置    |
-| port      | 端口，默认为6379                | 设置redis监听的端口号     |
-| dir       | /var/lib/redis                  | 设置持久化文件存放位置    |
-| databases | 16                              | 默认的数据库数量          |
-|           |                                 |                           |
-|           |                                 |                           |
-|           |                                 |                           |
-|           |                                 |                           |
+| 配置名           | 值                              | 说明                                                         |
+| ---------------- | ------------------------------- | ------------------------------------------------------------ |
+| daemonize        | yes                             | 使redis以守护进程模式运行                                    |
+| pidfile          | /var/run/redis/redis-server.pid | 设置redis的PID文件位置                                       |
+| port             | 端口，默认为6379                | 设置redis监听的端口号                                        |
+| dir              | /var/lib/redis                  | 设置持久化文件存放位置                                       |
+| databases        | 16                              | 默认的数据库数量                                             |
+| maxmemory        | N bytes                         | 限制redis最大可用内存大小（单位是字节）                      |
+| maxmemory-policy | volatile-ttl                    | 内存超过maxmemory后使用maxmemory-policy制定的策略来删除不需要的键，直至占用内存小于maxmemory |
+|                  |                                 |                                                              |
+|                  |                                 |                                                              |
+
+maxmemory-policy可选值
+
+| 规则            | 说明                                              |
+| --------------- | ------------------------------------------------- |
+| volatile-lru    | 使用LRU算法删除一个键，只对设置了过期时间的键生效 |
+| allkeys-lru     | 使用LRU算法删除一个键                             |
+| volatile-random | 随机删除一个键，只对设置了过期时间的键生效        |
+| allkeys-radom   | 随机删除一个键                                    |
+| volatile-ttl    | 删除过期时间最近的一个键                          |
+| noevction       | 不删除键，返回错误                                |
 
 
 
-#多数据库
+# 多数据库
 
 redis提供了多个多个用来存储数据的字典。客户端可以指定存在哪个字典中。
 
@@ -305,7 +316,133 @@ ZREVRANK key member
 ZREMRANGEBYSCORE key min max
 ```
 
+# 事务
 
+定义：一组命令的集合。
+
+事务同命令一样都是redis的最小执行单位，一个事务中的命令要么都执行，要么都不执行。
+
+原理：先将一个事务的命令发送给redis，然后再让redis依次执行这些命令。
+
+格式：
+
+```bash
+$ MULTI         # 告诉redis下面的命令属于同一个事务，暂时不要执行，先保存起来
+OK
+$ LPUSH list 1
+QUEUED          # 命令已经进入等待执行的事务队列中
+$ LPUSH list 2
+QUEUED          # 命令已经进入等待执行的事务队列中
+$ ...
+$ EXEC          # 依次执行事务队列中的所有命令
+1) (integer) 1  # EXEC的返回值就是这些命令返回值组成的列表，返回值顺序和命令的顺序相同
+2) (integer) 2
+```
+
+> + redis保证一个事务中的所有命令要么都执行，要么都不执行。如果在发送EXEC命令前客户端断线了，则redis会清空事务队列，事务中的命令都不执行。一旦客户端发送了EXEC命令，所有的命令都会执行，客户端断线也没关系，因为redis中记录了要执行的命令
+>
+> + redis的事务并没有提供回滚功能
+
+## 错误处理
+
++ 事务中出现语法错误，如
+
+  ```bash
+  $ MULTI
+  ok
+  $ SET a
+  (error) ERR number of arguments for set command
+  $ ERRORCOMMAND key
+  (error) unknown command ERRORCOMMAND
+  $ EXEC
+  (error) EXECABORT Transaction discarded because of previous errors.
+  ```
+
+  redis会直接返回错误，不会执行命令
+
++ 运行错误
+
+  命令执行时出现的错误，如用散列类型的命令操作集合类型的键。这种错误在实际执行前是无法发现的，所以在事务里这样的命令是被redis接受并执行的。如果事务里的一条命令出现了错误，事务里其他的命令依然会继续执行（包括出错命令之后的命令）。
+
+  ```bash
+  $ MULTI
+  ok
+  $ SET key value
+  QUNUED
+  $ SADD key a
+  QUNUED
+  $ SET key1 value1
+  QUNUED
+  $ EXEC
+  1) OK
+  2) (error) WRONGTYPE Operation against a key holding the wrong kind of value 
+  3) OK
+  ```
+
+# WATCH
+
+WATCH：监控一个或多个键，一旦其中有一个键被修改或删除，之后的事务就不会执行。监控一直持续到EXEC命令。
+
+UNWATCH：取消监控
+
+```bash
+$ set key 1
+OK
+$ watch key
+OK
+# 事务执行行修改了key的值，所以事务中的set key 3并没有执行，EXEC返回空结果
+$ set key 2 
+OK
+$ MULTI
+OK
+$ set key 3
+QUEUED
+$ exec
+(nil)
+$ get key
+"2"
+
+# 利用watch 实现INCR
+def INCR(key):
+	WATCH key
+	value = GET key + 1
+	# key的值中途改变的话，事务不会执行
+	MULTI
+		set key value
+	result = EXEC
+	return result[0]
+```
+
+> WATCH命令只是当被监控的键被修改后阻止之后一个事务的执行，而不能保证其他客户端不修改这一键值。
+>
+> 执行EXEC命令后会取消对所有键的监控
+>
+> 如果使用WATCH监测一个拥有过期时间的键，该键时间到期后自动删除并不会被WATCH命令认为该键被改变
+
+# 过期时间
+
+```bash
+# 设置key的过期时间，seconds=剩余秒数，到期后redis会自动删除它
+EXPIRE key seconds
+PEXPIRE key millisecond 
+# return 1 if set success，0 if key not exist or set fail
+
+# 返回过期剩余时间
+TTL key
+# return 
+# 	-2: 键不存在
+# 	-1: 存在但是无过期时间
+#    剩余秒数: 正常
+
+# 取消过期时间的设置
+PERSIST key
+# RETURN 1 if success，否则返回（键不存在/键本来就是永久的）
+```
+
+用处：
+
++ 实现访问频率限制
++ 缓存
 
 # 简拼
 
@@ -314,7 +451,7 @@ ZREMRANGEBYSCORE key min max
 | redis | remote dictionary server      |
 | INCR  | increment 增加，增长          |
 | DECR  | decrment 减少                 |
-|       |                               |
+| TTL   | Time To Live                  |
 |       |                               |
 |       |                               |
 |       |                               |
@@ -325,35 +462,35 @@ ZREMRANGEBYSCORE key min max
 
 # 单词
 
-| sentinel | 哨兵 |
-| -------- | ---- |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
-|          |      |
+| sentinel | 哨兵       |
+| -------- | ---------- |
+| expire   | 到期       |
+| persist  | 坚持，保持 |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
+|          |            |
 
