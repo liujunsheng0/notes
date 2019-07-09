@@ -40,6 +40,7 @@ def record_runtime(is_print: bool=True):
     def record_runtime_(f):
         def wrapper(*args, **kwargs):
             start = datetime.now().timestamp()
+            print(args, kwargs, f.__name__)
             r = f(*args, **kwargs)
             if is_print:
                 print('run func=%s run time = %s s' % (f.__name__, datetime.now().timestamp() - start))
@@ -56,3 +57,19 @@ def job(a, b):
 
 print(job(2, 3))
 
+
+class Test(object):
+    @record_runtime(False)
+    def job1(self, a, b):
+        sleep(1)
+        return a + b
+
+    @classmethod
+    @record_runtime(False)
+    def job2(cls, a, b):
+        sleep(1)
+        return a + b
+
+
+print(Test().job1(2, 3))
+print(Test().job2(2, 3))
