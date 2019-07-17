@@ -1,0 +1,129 @@
+```mysql
+SHOW ENGINES;
+```
+
+常用存储引擎对比(MySQL自带引擎)
+
+| 特性                                | MyISAM | MEMORY | InnoDB | NDB  |
+| ----------------------------------- | ------ | ------ | ------ | ---- |
+| 存储限制(Storage limits)            |        | √      | 64TB   | √    |
+| 事务安全(Transactions)              |        |        | √      |      |
+| 锁机制(Locking granularity)         | 表锁   | 表锁   | 行锁   | 行锁 |
+| B树索引(B-tree indexes)             | √      | √      | √      |      |
+| 哈希索引(Hash indexes)              |        | √      | √      | √    |
+| 全文索引(Full-text indexes)         | √      |        | √      |      |
+| 集群索引(Clustered indexes)         |        |        | √      |      |
+| 数据缓存(Data caches)               |        | √      | √      | √    |
+| 索引缓存(Index caches)              | √      | √      | √      | √    |
+| 数据可压缩(Compressed data)         | √      |        |        |      |
+| 外键支持(Foreign key support)       |        |        | √      |      |
+| 存储空间消耗(Storage Cost)          | 低     |        | 高     | 低   |
+| 内存消耗(Memory Cost)               | 低     | 中     | 高     | 高   |
+| 批量数据写入效率(Bulk insert speed) | 快     | 快     | 慢     | 高   |
+
+# MyISAM
+
+缺点：不支持事务和外键
+
+优势：访问速度快
+
+使用场景：对事务完整性没有要求或者以SELECT，INSERT为主的应用，少量更新和删除操作
+
+存储：每张表存储程三个文件，文件名和表名相同		
+
+```
+table_name.frm   frame 表定义
+table_name.MYD   my data 表数据
+table_name.MYI   my index 存储索引
+```
+
+存储方式：
+
++ 静态（固定长度）表
+
+  字段都是固定长度的，在不足列的宽度时会补足空格，在获取该数据时会去掉尾部空格（原始数据尾部带空格也会去掉）
+
++ 动态表
+
+  字段包含非固定长度的，优点是占用空间小，缺点是故障恢复比较困难
+
++ 压缩表
+
+  每条记录都是被单独压缩的，有很小的访问开支
+
+# InnoDB
+
+优点：提供了具有提交，回滚和恢复崩溃能力的事务安全
+
+缺点：写入效率差一些，并且会占用更多的磁盘空间以保留数据和索引。
+
+特点：
+
++ 自动增长列
+
+  1. InnoDB表的自动增长列可以手工插入，如果插入的是空值或0，实际插入的是自动增长后的值
+  2. 自动增长列必须是索引，如果是组合索引也必须是组合索引的第一列
+
+  ```mysql
+  create table autoincre_demo(i int auto_increment, s char, primary key(i))engine=innodb;
+  insert into autoincre_demo VALUES (0, "a"), (NULL, "b"), (3, "c"), (NULL, "d"), (100, "e"), (0, "f");
+  select * FROM autoincre_demo;
+  +-----+------+
+  | i   | s    |
+  +-----+------+
+  |   1 | a    |
+  |   2 | b    |
+  |   3 | c    |
+  |   4 | d    |
+  | 100 | d    |
+  | 101 | f    |
+  +-----+------+
+  ```
+
++ 外键约束
+
+  支持外键的存储引擎只有InnoDB，在创建外键的时候，要求父表必须有对应的索引，子表在创建外键的时候也会创建对应的索引
+
+存储方式：
+
++ 共享表空间存储
+
+  表结构存在.frm文件
+
+  数据和索引存在innodb_data_home_dir和innodb_data_file_path定义的表空间中
+
++ 多表空间存储
+
+  表结构存在.frm文件
+
+  数据和索引单独存储在.idb中
+
+# MEMORY
+
+使用存在于内存中的内容来创建表
+
+优点：访问非常快，因为数据是存在内存中的，默认使用HASH索引
+
+缺点：服务停止后，表中的数据就会丢失；对表的大小有限制，一般为16M
+
+```mysql
+create table tab_memory (a int, b int) engine=memory;
+show create table tab_memory;
+tab_memory | CREATE TABLE `tab_memory` (
+  `a` int(11) DEFAULT NULL,
+  `b` int(11) DEFAULT NULL
+) ENGINE=MEMORY DEFAULT CHARSET=utf8
+```
+
+# TokuDB
+
+高写性能高压缩的第三方引擎TokuDB。
+
+优点：高性能，支持事务处理，高扩展性，高压缩率，高效的写入性能。
+
+使用场景：
+
++ 日志数据，因为日志同城插入频繁且存储量大
++ 历史数据，写操作少，可利用高压缩存储
++ 在线DDL（Data Definition Language）频繁的场景
+
