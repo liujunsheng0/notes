@@ -1,0 +1,30 @@
+# Unicode
+UTF是Unicode Transformation Format的缩写
+
+# 字符集
+
+MySQL的字符集包含字符集（character）和校对规则（collation）两个概念。
+
+字符集：用来定义存储字符串的存储方式
+
+校对规则：用来定义比较字符串的方式
+
+字符集和校对规则是一对多的关系，每个字符集至少有一种校对规则
+
+```mysql
+# 查看可用字符集
+show character set;
+# 校对规则
+show collation;
+
+# 查看当前数据库字符集和校对规则
+show variables like 'character_set_database';
+show variables like 'collation_database';
+
+# 查看表的字符集
+show create table dept;
+```
+
+校对规则命名约定：以相关的字符集名开始，并且以`_ci`（大小写不敏感）、` _cs`（大小写敏感）、`_bin`（基于字符编码的值）结束。
+
+> 在创建数据库时需要明确指定字符集和校对规则，避免受到默认值影响
