@@ -1,5 +1,6 @@
 # python36_study
-Python3.6 study note
+Python3.6/3.7 study note
+
 
 # env 
 >= python3.6

@@ -352,6 +352,10 @@ if __name__ == '__main__':
 
 # 学习链接
 
+[官网-协程](https://docs.python.org/zh-cn/3/library/asyncio-task.html#coroutine)
+
+[官网-协程与任务](https://docs.python.org/zh-cn/3/library/asyncio-task.html#generator-based-coroutines)
+
 [廖雪峰---异步IO](https://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/00143208573480558080fa77514407cb23834c78c6c7309000)
 
 [协程](https://thief.one/2017/02/20/Python%E5%8D%8F%E7%A8%8B/)

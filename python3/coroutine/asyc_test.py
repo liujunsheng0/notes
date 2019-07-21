@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 
 import asyncio
@@ -74,11 +74,11 @@ class AsyncStudy(object):
         return datetime.now().strftime('%H:%M:%S')
 
     async def do_something(self, n):
-            print('start %s' % n, self.now)
+            print(f'start {n} now: {self.now}')
             # 在 sleep的时候, 使用await让出控制权.
             # 即当遇到阻塞时, 使用await方法将协程的控制权让出, 以便event_loop调用其他的协程
             await asyncio.sleep(n)  # 可视为费时的IO操作
-            print('end  %s' % n, self.now)
+            print(f'end   {n} now: {self.now}')
             return self.now
 
     def run(self, task):
@@ -89,10 +89,10 @@ class AsyncStudy(object):
             raise Exception('event loop is closed')
         if self.event_loop.is_running():
             raise Exception('event loop is running')
-        if isinstance(task, list):
+        if isinstance(task, list) and task:
             # asyncio实现并发, 就需要多个协程来完成任务, 每当有任务阻塞的时候就await, 然后其他协程继续工作
             # 创建多个协程的列表, 然后将这些协程注册到事件循环中.
-            task = asyncio.wait(task)
+            task = asyncio.gather(*task)
         # 协程对象不能直接运行, 在注册事件循环的时候, 其实是run_until_complete方法将协程包装成为了一个任务(task)对象
         # 所谓task对象是Future类的子类, 保存了协程运行后的状态, 用于未来获取协程的结果
 
@@ -101,7 +101,6 @@ class AsyncStudy(object):
 
     def close(self):
         if not self.event_loop.is_closed():
-            print('close')
             self.event_loop.stop()
             self.event_loop.close()
 
@@ -114,12 +113,10 @@ class AsyncStudy(object):
 
     def create_coroutine2(self):
         """ 创建协程对象的方法以及其返回值 """
-        task = self.do_something(1)
-        asyncio.gather(task)  # 创建协程对象, 那么await的返回值就是协程运行的结果
-        asyncio.wait([self.do_something(1), self.do_something(2)])
-        # for task in asyncio.as_completed(tasks):
-        #     result = await task
-        #     print('Task ret: {}'.format(result))
+        t1 = asyncio.gather(self.do_something(1))
+        t2 = asyncio.wait([self.do_something(1), self.do_something(2)])
+        self.run([t1, t2])
+
 
     def create_tasks(self):
         """ 协程对象 -> task """
@@ -239,9 +236,9 @@ class AsyncStudy(object):
         executor = futures.ThreadPoolExecutor(max_workers=5)
 
         def sleep_(t):
-            print('sleep start ', t, self.now, threading.get_ident())
+            print(f'sleep start {t} {self.now} tid:{threading.get_ident()}')
             sleep(t)
-            print('sleep end   ', t, self.now)
+            print(f'sleep end   {t} {self.now} tid:{threading.get_ident()}')
             return t
 
         async def blocked_sleep(loop_, t):
@@ -259,6 +256,7 @@ class AsyncStudy(object):
 if __name__ == '__main__':
     obj = AsyncStudy()
     # obj.create_corourine1()
+    # obj.create_coroutine2()
     # obj.create_tasks()
     # obj.callback()
     # obj.await_use()

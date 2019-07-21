@@ -1,4 +1,6 @@
+gevent
 cachetools
 pandas
 pytest
 nose
+tornado
