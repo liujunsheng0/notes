@@ -1,0 +1,56 @@
+
+
+# 什么是视图
+
+
+
+​	视图是一种**虚拟存在的表**，对于使用视图的用户来说基本是透明的。视图并不是真实存在的，行和列数据来自定义视图时使用的真实表，并且是在使用视图时动态生成的。
+
+**优点**
+
++ 简单化，数据所见即所得
++ 安全性，用户只能查询或修改他们所能见到得到的数据
++ 逻辑独立性，可以屏蔽真实表结构变化带来的影响
+
+**缺点**
+
++ 性能相对较差，简单的查询也会变得稍显复杂
++ 修改不方便，特变是复杂的聚合视图基本无法修改
+
+
+
+```mysql
+# 创建视图
+{ CREATE|REPLACE } [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+VIEW view_name [{column_list}]
+AS SELECT_STATEMENT
+[WITH [CASCADED | LOCAL |] CHECK OPTION]
+# 解释
+CREATE|REPLACE: 创建|替换已创建的视图
+ALGORITHM ： 视图算法
+	1.UNDEFINED 系统自动选择算法
+	2.MERGE使用的视图语句与视图定义合并起来
+	3.TEMPTABLE 结果存入临时表，然后用临时表执行语句
+view_name: 视图名称
+column_list: 属性列
+SELECT_STATEMENT: SELECT语句
+[WITH [CASCADED | LOCAL |] CHECK OPTION] 表示视图在更新时保证在视图的权限范围内
+	1.CASCADED 默认值, 更新视图时要满足所有相关视图和表的条件
+	2.LOCAL表示更新视图时满足该视图本身定义的条件即可
+	
+# 删除视图
+DROP VIEW view_name
+
+# 查看视图
+show tables;
+show create view view_name;
+```
+
+满足以下条件的视图不可更新
+
++ 包含以下关键字的sql语句：聚合函数(sum、min、max、count)、distinct、group  by 、having、union或者uinon all
++ 常量视图，如`create view pi as select 3.14 as pi`
++ SELECT  中包含子查询
++ JOIN，如LEFT JOIN...
++ FROM一个不可更新的视图
++ WHERE字句的子查询引用了FROM字句中的表
