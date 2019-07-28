@@ -1,0 +1,101 @@
+​	MySQL从5.02版本后支持触发器的功能。触发器是与表有关的数据库对象，在满足定义条件时触发，并执行触发器中定义的语句集合。可用来协助应用在数据库端确保数据的完整性。
+
+# 创建触发器
+
+```mysql
+CREATE TRIGGER trigger_name time event ON table_name FOR EACH ROW
+BEGIN
+    dosomething
+END
+trigger_time: BEFORE|AFTER, 在event之前/之后触发dosomething
+event: 触发事件, UPDATE|INSERT|DELETE
+# 使用别名OLD和NEW来引用触发器中发生变化的记录内容
+```
+
+> 同一个表相同触发事件的相同触发事件，只能定义一个触发器
+>
+> 目前的触发器仅支持**行级**触发
+>
+> 当触发多行时，触发器会执行多次
+>
+> 插入重复主key时，不会触发触发器
+>
+> 触发器执行顺序：BEFORE触发器->行操作->AFTER触发器
+
+```mysql
+CREATE TABLE `base` (`name` varchar(20), `age` tinyint(4) PRIMARY KEY (`name`));
+CREATE TABLE `base_log` (`dt` datetime, `name` varchar(20), `event` varchar(20));
+
+delimiter $$
+CREATE TRIGGER trigger_update_after_base AFTER UPDATE ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), OLD.name, "update after");
+END $$
+CREATE TRIGGER trigger_update_before_base BEFORE UPDATE ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), OLD.name, "update before");
+END $$
+
+CREATE TRIGGER trigger_insert_after_base AFTER INSERT ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), NEW.name, "insert after");
+END $$
+CREATE TRIGGER trigger_insert_before_base BEFORE INSERT ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), NEW.name, "insert before");
+END $$
+
+CREATE TRIGGER trigger_delete_after_base AFTER DELETE ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), OLD.name, "delete after");
+END $$
+CREATE TRIGGER trigger_delete_before_base BEFORE DELETE ON base FOR EACH ROW
+BEGIN
+	INSERT INTO base_log  VALUES(now(), OLD.name, "delete before");
+END $$
+
+delimiter ;
+INSERT INTO base VALUES("lilei", 15);
+INSERT INTO base VALUES("lilei", 15); # 错误， 主键重复，也不会触发触发器
+UPDATE base SET age=11;
+delete from base;
+
+# base_log
+# 2019-07-28 17:51:26	lilei	insert before
+# 2019-07-28 17:51:26	lilei	insert after
+# 2019-07-28 17:51:26	lilei	update before
+# 2019-07-28 17:51:26	lilei	update after
+# 2019-07-28 17:51:26	lilei	delete before
+# 2019-07-28 17:51:26	lilei	delete after
+```
+
+
+
+# 删除触发器
+
+```mysql
+# 默认当前数据库
+DROP TRIGGER [db_name] trigger_name;
+```
+
+
+
+# 查看触发器
+
+```mysql
+SHOW TRIGGERS;
+# name                          event   table   trigger_time  ...
+# trigger_insert_before_base	INSERT	base	BEFORE
+# trigger_insert_after_base	    INSERT	base	AFTER
+# trigger_update_before_base	UPDATE	base	BEFORE
+# trigger_update_after_base	    UPDATE	base	AFTER
+# trigger_delete_before_base	DELETE	base	BEFORE
+# trigger_delete_after_base	    DELETE	base	AFTER
+```
+
+
+
+# 限制
+
+1. 触发器不能调用将数据返回客户端的存储程序，也不能使用CALL语句的动态SQL语句
+2. 不能在触发器中使用以显式或隐式方式开始或结束事务的语句，如START TRANSACTION，COMMIT，ROLLBACK
