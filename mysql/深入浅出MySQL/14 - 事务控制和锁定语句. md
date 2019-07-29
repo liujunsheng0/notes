@@ -1,0 +1,84 @@
+# LOCK TABLE和UNLOCK TABLE
+
+LOCK TABLES可锁定用于当前线程的表。如果表被其他线程锁定，则当前线程会等待，直至可以获取到锁为止。
+
+UNLOCK TABLES可释放当前线程获得的所有锁定。当前线程执行一个另一个LOCK TABLES时，或与服务器的连接被关闭时，当前线程锁定的所有表都会被解锁。
+
+```mysql
+LOCK TABLES
+tbl_name [AS alias] {READ [LOCAL] WRITE}
+[, tbl_name [AS alias] {READ [LOCAL] WRITE}] ...
+```
+
+如果一个线程获得表的 READ 锁，那么该线程和所有其他线程只能从表中读数据，不能进行任何写操作。
+
+如果一个线程获得表的 WRITE 锁，那么只有拥有这个锁的线程可以从表中读取和写表。其它的线程被阻塞。
+
+> LOCAL修饰符表示允许在其他会话中对在当前会话中获取了READ锁的的表执行插入。但是对于InnoDB表，READ LOCAL与READ相同。
+
+| session1                                                     | session2                             |
+| ------------------------------------------------------------ | ------------------------------------ |
+| LOCK TABLES test READ;                                       |                                      |
+| select * from test; 成功                                     | select * from test; 可以查询到结果   |
+| insert into test values("2");Table 'test' was locked with a READ lock and can't be updated | insert into test values("2");阻塞... |
+| UNLOCK TABLES;                                               |                                      |
+|                                                              | 解除阻塞，插入成功                   |
+| LOCK TABLES test write;                                      |                                      |
+| select * from test;成功                                      | select * from test;阻塞ing           |
+| insert into test values("3");成功                            |                                      |
+| unlock tables;                                               |                                      |
+|                                                              | 解除阻塞，查询成功                   |
+
+
+
+# 事务控制
+
++ 事务
+
+  把一系列要执行的操作称为事务
+
++ 事务管理
+
+  管理这些操作要么完全执行，要么完全不执行
+
+  （很经典的一个例子是：A要给B转钱，首先A的钱减少了，但是突然的数据库断电了，导致无法给B加钱，然后由于丢失数据，B不承认收到A的钱；在这里事务就是确保加钱和减钱两个都完全执行或完全不执行，如果加钱失败，那么不会发生减钱）
+
++ 事务管理的意义
+
+  保证数据操作的完整性
+
++ MySQL中并不是所有的数据引擎都支持事务管理的，只有INNODB支持事务管理
+
++ **事务管理的特性**
+
+  1. 原子性：事务的整个操作是一个整体，不可以分割，要么全部成功，要么全部失败
+  2. 一致性：事务操作的前后，数据表中的数据没有变化
+  3. 隔离性：事务操作是相互隔离不受影响的
+  4. 持久性：数据一旦提交，不可改变，永久的改变数据表数据
+
++ 相关命令
+
+  ```mysql
+  # 修改当前的连接的提交方式
+  #　如果设置了SET AUTOCOMMIT=0,之后所有的事务都需要通过明确的命令进行提交或者回滚
+  SET AUTOCOMMIT = {0 | 1}
+  
+  # 开始事务
+  START TRANSACTION | BEGIN
+  # 提交事务
+  COMMIT [WORK] [AND [NO] CHAIN] [[NO] RELEASE]
+  # 回滚事务
+  ROLLBACK [WORK] [AND [NO] CHAIN] [[NO] RELEASE]   
+  ```
+
+  CHAIN和RELEASE可以被用于对事务完成进行附加控制。
+
+  1. `AND CHAIN`会在当前事务结束时，立刻启动一个新事务，并且新事务与刚结束的事务有相同的隔离等级。
+  2. RELEASE在终止了当前事务后，会让服务器断开与当前客户端的连接。
+  3. 包含NO关键词可以抑制CHAIN或RELEASE完成。如果completion_type系统变量被设置为一定的值，使连锁或释放完成可以默认进行，此时NO关键词有用。
+
++ 注意事项
+
+  1. 使用START TRANSACTION，AUTOCOMMIT仍然被禁用，直到您使用COMMIT或ROLLBACK结束事务为止。然后AUTOCOMMIT模式恢复到原来的状态
+  2. **使用START TRANSACTION命令开始一个事务时，会造成一个隐含的UNLOCK TABLES被执行**
+  3. 在同一个事务中，不要操作不同存储引擎的表，否则需要对非事务类型的表进行特别的处理，因为COMMIT和ROLLBACK只能对事务类型的表进行提交和回滚
