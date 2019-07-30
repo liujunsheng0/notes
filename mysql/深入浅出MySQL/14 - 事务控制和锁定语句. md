@@ -80,5 +80,24 @@ tbl_name [AS alias] {READ [LOCAL] WRITE}
 + 注意事项
 
   1. 使用START TRANSACTION，AUTOCOMMIT仍然被禁用，直到您使用COMMIT或ROLLBACK结束事务为止。然后AUTOCOMMIT模式恢复到原来的状态
-  2. **使用START TRANSACTION命令开始一个事务时，会造成一个隐含的UNLOCK TABLES被执行**
+  2. **使用START TRANSACTION/BEGIN命令开始一个事务时，会造成一个隐含的UNLOCK TABLES被执行**
   3. 在同一个事务中，不要操作不同存储引擎的表，否则需要对非事务类型的表进行特别的处理，因为COMMIT和ROLLBACK只能对事务类型的表进行提交和回滚
+  4. 默认情况下，每条命令都是自动提交的命令
+
+| session1                             | session2                     |
+| ------------------------------------ | ---------------------------- |
+| select * from test; # empty          |                              |
+| begin; insert into test values("1"); |                              |
+| select * from test; # 1              | select * from test; # empty  |
+| commit;                              |                              |
+|                                      | select * from test; # 1      |
+| begin;                               |                              |
+| delete from test;                    |                              |
+| select * from test; # empty          | select * from test; # 1      |
+| rollback;  # 回滚                    |                              |
+| select * from test; # 1              | select * from test; # 1      |
+| LOCK TABLE test write;               |                              |
+|                                      | select * from test; 阻塞...  |
+| BEGIN;                               |                              |
+|                                      | select * from test; 阻塞解除 |
+
