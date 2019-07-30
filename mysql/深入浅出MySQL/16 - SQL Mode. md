@@ -1,0 +1,62 @@
+SQL Mode（SQL模式）定义了MySQL应支持的SQL语法，数据校验等。
+
+# 简介
+
+SQL MODE常用来解决以下问题
+
++ 完成不同程度的数据校验，有效的保证数据准确性
++ 通过设置SQL Mode为ANSI模式，来保证大多数SQL符合标准的SQL语法，迁移时无需对业务SQL进行大量的修改
++ 不同数据库之间进行数据迁移之前，可设置SQL Mode一致，使MySQL上的数据方便的迁移到目标数据库
+
+```mysql
+# SQL模式, MySQL中默认变量不区分大小写
+SELECT @@SQL_MODE;
+# 设置, modes之间用逗号分隔
+SET [SESSION|GLOBAL] SQL_MODE="modes";
+```
+
+# 常见的SQL_MODE
+
+[官网链接](https://dev.mysql.com/doc/refman/5.7/en/sql-mode.html)
+
++ ONLY_FULL_GROUP_BY
+
+  出现在select语句、HAVING条件和ORDER BY语句中的列，必须是GROUP BY的列或者依赖于GROUP BY列的函数列。
+
++ NO_AUTO_VALUE_ON_ZERO
+
+  该值影响自增长列的插入。默认设置下，插入0或NULL代表生成下一个自增长值。如果用户希望插入的值为0，而该列又是自增长的，那么这个选项就有用了。
+
++ STRICT_TRANS_TABLES
+
+  在该模式下，如果一个值不能插入到一个事务表中，则中断当前的操作，对非事务表不做限制
+
+  (如插入数据超过长度限制，报错，varchar(3)的列，插入"1234"，此模式下报错)
+
++ NO_ZERO_IN_DATE
+
+  这个模式影响了是否允许日期中的月份和日包含0。如果开启此模式，2016-01-00是不允许的，但是0000-02-01是允许的。它实际的行为受到 strict mode是否开启的影响1。
+
++ NO_ZERO_DATE
+
+  设置该值，mysql数据库不允许插入零日期。它实际的行为受到 strictmode是否开启的影响2。
+
++ ERROR_FOR_DIVISION_BY_ZERO
+
+  在INSERT或UPDATE过程中，如果数据被零除，则产生错误而非警告。如果未给出该模式，那么数据被零除时MySQL返回NULL
+
++ NO_AUTO_CREATE_USER
+
+  禁止GRANT创建密码为空的用户
+
++ NO_ENGINE_SUBSTITUTION
+
+  如果需要的存储引擎被禁用或未编译，那么抛出错误。不设置此值时，用默认的存储引擎替代，并抛出一个异常
+
++ PIPES_AS_CONCAT
+
+  将"||"视为字符串的连接操作符而非或运算符，这和Oracle数据库是一样的，也和字符串的拼接函数Concat相类似
+
++ ANSI_QUOTES
+
+  启用ANSI_QUOTES后，不能用双引号来引用字符串，因为它被解释为识别符
