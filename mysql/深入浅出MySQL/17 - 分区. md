@@ -1,0 +1,251 @@
+# 概述
+
+**定义**
+
+​	分区是指按照一定的规则，数据库把一个表分解成更小的，更容易管理的部分。就应用来说，逻辑上只有一个表，但是实际上该表可能由N个物理分区对象组成，每个分区都是一个独立的对象，可以独自处理。
+
+**优点**
+
++ 和单个磁盘或文件系统分区相比，可以存储更多数据
++ 优化查询，在where子句包含分区条件时，可以只扫描必要的分区表来提高查询效率，同时涉及到SUM()和COUNT()这类聚合函数的查询时，可以在每个分区并行处理，提高查询速度
++ 对于已经过期的数据可以通过删除分区来快速删除数据
++ 跨多个磁盘来分散查询数据，可以获得更大的查询吞吐量
+
+**缺点**
+
++ 每当更新分区键时，需要重新计算该条数据放到哪个分区，所以不适用于经常更新分区键的表
+
+**分区键**
+
+用于根据某个区间值，特定值或HASH值来执行函数的聚集，让数据根据规则分布在不同的分区中，让一个很大的对象变成一些小对象
+
+ **是否支持分区**
+
+```mysql
+SELECT VERSION();
+# 5.7.27-0ubuntu0.16.04.1
+SELECT PLUGIN_NAME,PLUGIN_VERSION, PLUGIN_STATUS FROM INFORMATION_SCHEMA.PLUGINS WHERE PLUGIN_NAME='partition';
+# partition	1.0	ACTIVE  
+```
+
+**分区类型**
+
++ RANGE
+
+  基于一个给定连续区间范围，将数据分到不同的分区
+
++ LIST
+
+  类似于RANGE分区，区别在于LIST是基于枚举的值来分区
+
++ HASH
+
+  基于给定的分区个数，把数据分配到不同的分区
+
++ KEY
+
+  类似于HASH分区
+
+Demo
+
+```mysql
+DROP TABLE IF EXISTS test_partition;
+CREATE TABLE test_partition(dt DATE) PARTITION BY HASH(MONTH(dt)) PARTITIONS 6;
+INSERT INTO test_partition VALUES ("2019-01-01"), ("2019-02-01"), ("2019-03-01"),("2019-04-01"),("2019-05-01"),("2019-06-01");
+DESC SELECT * FROM test_partition;
+# id  select_type      table            partitions 
+# 1	    SIMPLE	   test_partition	p0,p1,p2,p3,p4,p5
+# 存储文件格式如下
+# $/var/lib/mysql/test# ll | grep test_partition
+# -rw-r----- 1 mysql mysql   8556 7月  31 22:30 test_partition.frm
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p0.ibd
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p1.ibd
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p2.ibd
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p3.ibd
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p4.ibd
+# -rw-r----- 1 mysql mysql  98304 7月  31 22:33 test_partition#P#p5.ibd
+```
+
+**注意事项**
+
++ 无论是哪种分区类型，如果分区表包含主键或唯一键，分区键必须使用主键或唯一键，不能使用其他字段分区，不然会返回类似于如下的错误`A PRIMARY KEY must include all columns in the table's partitioning function`，如
+
+  ```mysql
+  DROP TABLE IF EXISTS test_partition;
+  CREATE TABLE test_partition(dt DATE, i INT DEFAULT 0, PRIMARY KEY (i)) PARTITION BY HASH(MONTH(dt)) PARTITIONS 6;
+  ```
+
++ 分区的名字不区分大小写
+
+  ```mysql
+  DROP TABLE IF EXISTS test_partition;
+  CREATE TABLE test_partition (a INT) PARTITION BY RANGE COLUMNS ( a ) (
+  	PARTITION p01 VALUES LESS THAN ( 10 ),
+  	PARTITION P01 VALUES LESS THAN ( 20 ));
+  # 报错,  Duplicate partition name P01
+  # P01 等价于p01, 分区名重复, 所以报错
+  ```
+
+
+
+
+# RANGE分区
+
+​	按照RANGE分区的表是利用取值范围将数据分成分区，区间要连续且不能重叠。
+
+**语法**
+
+​	使用``VALUE LESS THAN`操作符进行分区定义。
+
+**注意**
+
++ 每个分区必须是按顺序定义的，从最低到最高
++ 如果插入的数据不在范围内，会出现插入错误
++ 可使用`VALUES LESS THAN MAXVALUE `来表示最大的正整数
++ NULL值会被当作最小值处理
++ MySQL5.5开始支持了非整数分区，如日期
+
+**适用场景**
+
++ 定期删除过期数据，如按天分区的表
+
+  只需要如下命令
+
+  ```mysql
+  ALTER TABLE table_name DROP PARTITION partition_name;
+  ```
+
+  对于具有上百万条的记录来说，删除指定分区比运行一个DELETE语句有效的多
+
++ 经常运行包含分区键的查询，可以减少查询量
+
+**demo**
+
+```mysql
+DROP TABLE IF EXISTS test_partition;
+CREATE TABLE test_partition (dt datetime) PARTITION BY RANGE(YEAR(dt)) (
+	PARTITION p1 VALUES LESS THAN ( 2000 ),
+	PARTITION p2 VALUES LESS THAN ( 2100 ));
+```
+
+
+
+# LIST 分区
+
+​	LIST分区是按照特定的值来分区，根据已有的值来进行分区。和RANGE的区别在于，LIST属于枚举列表的集合，RANGE属于一个连续区间的集合。
+
+**语法**
+
+​	PARTITION BY LIST(expr)，expr是某列值或一个基于列值的表达式
+
+​	通过VALUES IN(value_list)来定义区分，value_list是一个逗号分隔的列表
+
+​	LIST分区不必声明任何特定的顺序
+
+**注意**
+
+- 如果插入的数据不在范围内，会出现插入错误
+- NULL值需要在value_list中声明，不然会报错
+
+**demo**
+
+```mysql
+DROP TABLE IF EXISTS test_partition;
+CREATE TABLE test_partition (c INT) PARTITION BY LIST(c) (
+	PARTITION p1 VALUES IN (1, 2),
+	PARTITION p2 VALUES IN (3, 4));
+```
+
+
+
+
+
+# COLUMNS
+
+为了解决MySQL5.5之前RANGE和LIST分区只支持整数分区的问题。
+
+分为RANGE COLUMNS和 LIST COLUMNS，支持以下类型：
+
++ 整数类型：tinyint、smallint、mediumint、int、bigint，其他都不支持
++ 日期类型：date、datetime
++ 字符类型：varchar、binary、varbinary，不支持text和blob
+
+COLUMNS还支持多列分区。
+
+
+
+# HASH
+
+​	HASH分区主要用来分散查询，确保数据分别尽可能平均。对一个表进行HASH分区时，MySQL会对分区键应用一个散列函数，以确定数据放在N个分区中的哪个分区。
+
+> HASH只支持整数分区
+
+**分类**
+
++ 常规HASH，取模
+
+  缺点：添加分区时，需要重新计算分区，不适合需要灵活变动分区的需求
+
++ 线性HASH，分布函数是一个线性的2的幂的运算法则
+
+  优点：在分区维护（增删改合并）时，MySQL可以处理的更加迅速
+
+  缺点：对比常规HASH，线性HASH各个分区直接的数据分布不太均匀
+
+**语法**
+
+```mysql
+# 常规HASH partition_num 分区个数
+PARTITION BY HASH(expr) PARTITIONS partition_num;
+
+# 线性HASH partition_num 分区个数
+PARTITION BY LINEAR HASH(expr) PARTITIONS partition_num;
+```
+
+**demo**
+
+```mysql
+DROP TABLE IF EXISTS test_partition;
+CREATE TABLE test_partition (c INT) PARTITION BY HASH(c) PARTITIONS 4;
+```
+
+
+
+# KEY分区
+
+类似于HASH分区，与HASH区别
+
++ HASH支持用户自定义表达式
+
+  KEY分区不支持用户自定义表达式，需要使用MYSQL提供的HASH函数
+
++ HASH分区只支持整数分区
+
+  KEY分区支持除BLOB和TEXT类型外其他类型作为分区键
+
+**语法**
+
+```mysql
+# expr可以为零个或者多个字段名的列表, 如过expr不指定分区, 默认使用主键, 没有主键时, 使用非空唯一键
+PARTITION BY [LINEAR] KEY(expr) PARTITIONS partition_num;
+```
+
+
+
+# 子分区
+
+子分区是对每个分区表中的每个分区再次分割，又被称为复合分区。如
+
+```mysql
+DROP TABLE IF EXISTS test_partition;
+CREATE TABLE test_partition (id INT)
+    PARTITION BY RANGE( id)
+    SUBPARTITION BY HASH( id ) SUBPARTITIONS 2 
+    (
+      PARTITION p0 VALUES LESS THAN (1990),
+      PARTITION p1 VALUES LESS THAN (2000),
+      PARTITION p2 VALUES LESS THAN MAXVALUE
+    );
+```
+
+表test_partition有三个RANGE分区（p0，p1，p2），这三个分区又被分成了两个子分区，实际上，整个表被分成了3 × 2=6个分区。
