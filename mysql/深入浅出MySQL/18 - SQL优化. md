@@ -1,0 +1,219 @@
+# 查看SQL执行频率
+
+```mysql
+# 默认为SESSION
+SHOW [SESSION | GLOBAL] STATUS;
+# variable_name  value
+# ...
+```
+
+**Com_xxx表示每个xxx语句的执行次数**
+
+| variable_nale | value                                                 |
+| ------------- | ----------------------------------------------------- |
+| Com_select    | 执行SELECT的次数，一次查询加一                        |
+| Com_insert    | 执行INSERT的次数，批量插入的INSERT操作，只累加一次    |
+| Com_update    | ...                                                   |
+| Com_delete    | ...                                                   |
+| Com_commit    | 事务提交次数                                          |
+| Com_rollback  | 事务回滚次数，如果回滚次数过多，说明sql编写可能有问题 |
+|               |                                                       |
+
+以下参数是针对Innodb存储引擎
+
+| variable_nale        | value                 |
+| -------------------- | --------------------- |
+| Innodb_rows_select   | select 查询返回的行数 |
+| Innodb_rows_inserted | 插入的行数            |
+| Innodb_rows_updated  | 更新的行数            |
+| Innodb_rows_deleted  | 删除的行数            |
+
+| variable_nale | value                                |
+| ------------- | ------------------------------------ |
+| Connections   | 试图连接服务器的次数                 |
+| Uptime        | 服务器工作时间（从开启到现在的秒数） |
+| Slow_queries  | 慢查询次数                           |
+|               |                                      |
+
+详见[https://www.cnblogs.com/zuxing/articles/7761262.html](https://www.cnblogs.com/zuxing/articles/7761262.html)
+
+
+
+# 通过EXPLAIN/DESC分析SQL
+
+```mysql
+EXPLAIN(DESC) sql...;
+```
+
+```mysql
+mysql> EXPLAIN SELECT * FROM test  WHERE v="a" \G
+           id: 1
+  select_type: SIMPLE
+        table: test   # 输出结果集的表
+   partitions: NULL   # 分区
+         type: ALL    # 找到所需要行的方式
+possible_keys: NULL   # 查询时可能用到的索引
+          key: NULL   # 实际用到的索引
+      key_len: NULL   # 使用到索引字段的长度
+          ref: NULL   
+         rows: 1      # 扫描行的数量
+     filtered: 100.00
+        Extra: Using where  # 执行的额外说明
+1 row in set, 1 warning (0.00 sec)
+```
+
++ select_type，以下为常见取值
+
+  | SIMPLE   | 简单表，即不用表连接或子查询      |
+  | -------- | --------------------------------- |
+  | PRIMARY  | 主查询，即外层的查询              |
+  | UNION    | UNION中的第二个或者后面的查询语句 |
+  | SUBQUERY | 子查询中的第一个SELECT            |
+
++ type，常见以下取值
+
+  | ALL          | 全表扫描                                                 |
+  | ------------ | -------------------------------------------------------- |
+  | index        | 索引全扫描                                               |
+  | range        | 索引范围扫描                                             |
+  | ref          | 使用非唯一索引扫描或唯一索引的前缀扫描                   |
+  | eq_ref       | 使用的索引为唯一索引                                     |
+  | const/system | 单表中最多有一个匹配行，查询非常快，如主键或唯一索引查询 |
+  | NULL         | 不用访问被就等得到结果                                   |
+
+
+
+# 通过show profile分析SQL
+
+```mysql
+# 查看数据库是否支持show profiles
+SELECT @@have_profiling;
+# YES
+# 查看是否开启profiling
+SELECT @@PROFILING
+# 1
+```
+
+```mysql
+SELECT COUNT(*) FROM test;
+SHOW PROFILES;
+# qurey_id  duration	query
+# 26	    0.00072275	SHOW STATUS
+# 27	    0.000699	SHOW STATUS
+# 28	    0.000181	SELECT COUNT(*) FROM test
+SHOW PROFILE FOR QUERY 28;
+```
+
+
+
+# 索引
+
+​	索引是在MySQL的存储引擎层中实现的。所以每种存储引擎支持的索引可能会有差异。MySQL中常见的索引为以下几种
+
++ B-Tree索引
++ HASH索引，只有Memory支持
++ Full-text（全文）索引
+
+​	MySQL还能对列的前缀进行索引，虽然可以缩短索引文件的大小，但是在排序和分组的时候无法使用。
+
+| 索引      | MyISAM | InnoDB | Memory |
+| --------- | ------ | ------ | ------ |
+| B-Tree    | √      | √      | √      |
+| HASH      |        |        | √      |
+| Full-text | √      |        |        |
+
+HASH索引适用于Key-Value查询，不适用于范围查询（<,>等）操作。一般来说，只有=才会用到索引
+
+
+
+# 使用索引
+
+B-Tree构造类似二叉树，能根据键值进行快速的查询，通常只需要很少的操作就可以找到相应的行。
+
+> B-Tree中的B不代表二叉树(binary)，而是代表平衡树(balanced)
+>
+> B-Tree并不是二叉树，而是多叉树
+>
+> 可利用B-Tree进行关键字、关键字范围、和前缀查询
+
+
+
+存在B-Tree索引但是不能使用索引的场景
+
+1. 以%开头的LIKE查询不能够利用B-tree索引
+
+2. 数据类型出现隐式转换，如表中类型为varchar，查询中使用int
+
+3. 复合索引的情况下，查询条件不满足索引最左的原则
+
+4. Mysql估计使用索引比全表扫描慢，如查询电影名中包含"s"的电影
+
+5. 用or分割开的条件，or前条件有索引，or后的列没有索引
+
+   **因为or后面的条件没有索引，那么后面的查询肯定要进行全表扫描，在存在全表扫描的情况下，就没有必要多一次索引扫描增加IO访问。**
+
+
+
+# 查看索引使用情况
+
+```mysql
+SHOW STATUS LIKE "Handler_read%";
+# Handler_read_first	13
+# Handler_read_key	3590   # 索引被读取的次数
+# Handler_read_last	0
+# Handler_read_next	152
+# Handler_read_prev	0
+# Handler_read_rnd	501
+# Handler_read_rnd_next	11340 # 数据文件中读下一行的请求数, 如果该值很高, 意味着查询低效
+```
+
+
+
+# SQL优化
+
+## 大批量插入数据
+
+以下几种方式可以关闭InnoDB表的导入方式
+
+1. 因为InnoDB类型表是按照主键顺序保存的，所以导入的数据按照主键顺序排列，可以有效的提高导入效率
+2. 导入数据前，执行`SET UNIQUE_CHECKS=0` ，关闭唯一性校验，结束后恢复教研
+3. 如果应用为自动提交的方式，建议在导入前执行`SET AUTOCOMMIT=0`，关闭自动提交，导入结束后再打开
+
+## INSERT
+
+1. 一次插入多个值
+
+   ```mysql
+   INSERT DELAYED INTO `test`.`test`(`v`) VALUES ('a'), ('b'), ('c');
+   ```
+
+   
+
+2. 如果从不同客户端插入很多行，可以使用INSERT DELAYED语句得到更高的速度。
+
+   INSERT DELAYED INTO，MySQL返回OK状态给客户端。然而并没有将数据插入表，而是存储在内存里面等待排队。当mysql有空余时，再插入。
+
+   好处：提高插入的速度，客户端无需等待太长时间。
+
+   坏处：不能返回自动递增的ID，以及系统崩溃时，MySQL还没有来得及插入数据的话，这些数据将会丢失。
+
+##  ORDER BY
+
+
+
+
+
+# 优化
+
++ 当删除了表的大部分数据或者对包含可变长度的列的表进行了修改，则应使用如下命令进行表优化
+
+  ```mysql
+  OPTIMIZE TABLE table_name1, [table_name2...]
+  # 执行期间, 将会对表进行锁定
+  # 只对MyISAM, InnoDB, BDB表有效
+  ```
+
+  
+
++ 
+
