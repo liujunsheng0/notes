@@ -1,4 +1,32 @@
-# SQL
-
 SQL是Structure Query Language（结构化查询语言）的缩写，它是关系模型数据库的应用语言，大多数关系型数据库系统都指出SQL标准。
+
+
+
+**DDL（Data Definition Languages）语句：**数据定义语言，定义了不同的数据段、数据库、表、列、索引等**数据库对象**。常用关键字主要包括CREATE、DROP、ALTER，TRUNCATE。
+
+**DML（Data Manipulation Language）语句：**数据操纵语句，用于添加、删除、更新和查询数据库记录，检查数据完整性，常用关键字主要包括 INSERT、DELETE、UPDATE 和SELECT 。
+
+**DCL（Data Control Language）语句：**数据控制语句，这些语句定义了数据库、表、字段、用户的访问权限和安全级别。常用关键字主要包括 GRANT、REVOKE 等。
+
+
+
+[MySQL自带数据库](<https://blog.csdn.net/dj673344908/article/details/80482844>)
+
+1. information_schema 
+
+   information_schema是一个信息数据库，它保存着关于MySQL服务器所维护的所有其他数据库的信息。
+
+2. mysql
+
+   主要负责存储数据库的用户、权限设置、关键字等mysql自己需要使用的控制和管理信息。
+
+3. performance_schema
+
+   主要用于收集数据库服务器性能参数。并且库里表的存储引擎均为PERFORMANCE_SCHEMA，而用户是不能创建存储引擎为PERFORMANCE_SCHEMA的表。
+
+4. sys
+
+   sys库所有的数据源来自：performance_schema。
+
+   目标是把performance_schema的把复杂度降低，让DBA能更好的阅读这个库里的内容。让DBA更快的了解DB的运行情况。 
 
