@@ -25,6 +25,18 @@ SQL（Structure Query Language）
 
 ## char、varchar、text的区别
 
+CHAR和VARCHAR对比（非严格模式）
+
+| 值        | CHAR(4) | 存储需求(字节) | SELECT CONCAT(v, "+") | VARCHAR(4) | 存储需求(字节) | SELECT CONCAT(v, "+") |
+| --------- | ------- | -------------- | --------------------- | ---------- | -------------- | --------------------- |
+| ""        | "    "  | 4              | "+"                   | ""         | 1              | "+"                   |
+| "  "      | "    "  | 4              | "+"                   | "  "       | 3              | "  +"                 |
+| "a"       | "a   "  | 4              | "a+"                  | "a"        | 2              | "a+"                  |
+| "abcd"    | "abcd"  | 4              | "abcd+"               | "abcd"     | 5              | "abcd+"               |
+| "abcdefg" | "abcd"  | 4              | "abcd+"               | "abcd"     | 5              | "abcd+"               |
+
+> VARCHAR存储等于字符串的字节数 + 存储字符串长度的字节数
+
 - CHAR为定长字符串，长度为0~255；VARCHAR，TEXT为变长字符串，长度为0~65536
 
 - CHAR和VARCHAR需要指定长度，TEXT不用指定长度
