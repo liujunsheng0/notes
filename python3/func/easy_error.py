@@ -1,5 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
+
 """函数中的易错点"""
 
 
@@ -20,13 +21,16 @@ def right_default_parameter(l: list = None):
 
 
 # 函数中的变量是在执行时绑定
-def test_func_bound_in_run():
+def func_bound_in_run():
     x = 1
     f1 = lambda z: x + z
     x = 2
     f2 = lambda z: x + z
     f3 = [lambda: i for i in range(10)]
+    # 此时 x等于2, f3中的任意函数返回值都是9
     print(f1(1), f2(1), [f3[i]() for i in range(10)])  # 3 3 [9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+    x = 4
+    print(f1(1), f2(1), [f3[i]() for i in range(10)])  # 5 5 [9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
 
     # 可利用默认参数解决上述问题, 默认参数只在函数定义时绑定一次
     x = 1
@@ -39,5 +43,4 @@ def test_func_bound_in_run():
 
 if __name__ == '__main__':
     # error_default_parameter()
-    test_func_bound_in_run()
-
+    func_bound_in_run()

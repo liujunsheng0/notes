@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 
 
@@ -149,6 +149,7 @@ class Combination(object):
         o.product()
         o.permutations()
         o.combinations()
+
 
 if __name__ == '__main__':
     Infinite.test()
