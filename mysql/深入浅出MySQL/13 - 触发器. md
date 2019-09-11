@@ -20,7 +20,7 @@ event: 触发事件, UPDATE|INSERT|DELETE
 >
 > 插入重复主key时，不会触发触发器
 >
-> 触发器执行顺序：BEFORE触发器->行操作->AFTER触发器
+> 触发器执行顺序：BEFORE触发器->行操作->AFTER触发器，任何一步操作发生错误都不会执行剩下的操作。如果是事务表进行操作，那么整个事务会回滚。
 
 ```mysql
 CREATE TABLE `base` (`name` varchar(20), `age` tinyint(4) PRIMARY KEY (`name`));
