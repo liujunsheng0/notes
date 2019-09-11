@@ -1,29 +1,33 @@
 ```mysql
+# 查看支持的引擎
 SHOW ENGINES;
 +--------------------+---------+
 | Engine             | Support |
 +--------------------+---------+
 | MyISAM             | YES     |
 | MEMORY             | YES     |
-| InnoDB             | DEFAULT |      
+| InnoDB             | DEFAULT |
+
+# 修改存储引擎
+ALTER TABLE table_name ENGINE=InnoDB;
 ```
 
 常用存储引擎对比(MySQL自带引擎)
 
 | 特性                                | MyISAM | MEMORY | InnoDB | NDB  |
 | ----------------------------------- | ------ | ------ | ------ | ---- |
-| 存储限制(Storage limits)            |        | √      | 64TB   | √    |
+| 存储限制(Storage limits)            | √      | √      | 64TB   | √    |
 | 事务安全(Transactions)              |        |        | √      |      |
 | 锁机制(Locking granularity)         | 表锁   | 表锁   | 行锁   | 行锁 |
-| B树索引(B-tree indexes)             | √      | √      | √      |      |
-| 哈希索引(Hash indexes)              |        | √      | √      | √    |
-| 全文索引(Full-text indexes)         | √      |        | √      |      |
+| B树索引(B-tree indexes)             | √      | √      | √      | √    |
+| 哈希索引(Hash indexes)              |        | √      |        | √    |
+| 全文索引(Full-text indexes)         | √      |        |        |      |
 | 集群索引(Clustered indexes)         |        |        | √      |      |
 | 数据缓存(Data caches)               |        | √      | √      | √    |
 | 索引缓存(Index caches)              | √      | √      | √      | √    |
 | 数据可压缩(Compressed data)         | √      |        |        |      |
 | 外键支持(Foreign key support)       |        |        | √      |      |
-| 存储空间消耗(Storage Cost)          | 低     |        | 高     | 低   |
+| 存储空间消耗(Storage Cost)          | 低     | N/A    | 高     | 低   |
 | 内存消耗(Memory Cost)               | 低     | 中     | 高     | 高   |
 | 批量数据写入效率(Bulk insert speed) | 快     | 快     | 慢     | 高   |
 
@@ -33,7 +37,7 @@ SHOW ENGINES;
 
 优势：访问速度快
 
-使用场景：对事务完整性没有要求或者以SELECT，INSERT为主的应用，少量更新和删除操作
+使用场景：对事务完整性没有要求，并发性要求不高，以SELECT，INSERT为主的应用，少量更新和删除操作
 
 存储：每张表存储程三个文件，文件名和表名相同		
 
@@ -59,9 +63,11 @@ table_name.MYI   my index 存储索引
 
 # InnoDB
 
-优点：提供了具有提交，回滚和恢复崩溃能力的事务安全 
+优点：提供了具有提交，回滚和恢复崩溃能力的**事务安全** 
 
-缺点：写入效率差一些，并且会占用更多的磁盘空间以保留数据和索引。
+缺点：对比MyISAM写入效率差一些，并且会占用更多的磁盘空间以保留数据和索引。
+
+使用场景：对事务完整性有比较高的要求，在并发条件下要求数据的一致性，数据操作除了插入和查询以外，还包括很多的更新、删除操作。InnoDB 存储引擎除了有效地降低由于删除和更新导致的锁定，还可以确保事务的完整提交(Commit)和回滚(Rollback)，对于类似计费系统或者财务系统等对数据准确性要求比较高的系统，InnoDB是合适的选择。
 
 特点：
 
@@ -132,7 +138,7 @@ table_name.MYI   my index 存储索引
 
   数据和索引存在innodb_data_home_dir和innodb_data_file_path定义的表空间中
 
-+ 多表空间存储
++ 多表空间存储（默认）
 
   表结构存在.frm文件
 
@@ -147,8 +153,8 @@ table_name.MYI   my index 存储索引
 缺点：服务停止后，表中的数据就会丢失；对表的大小有限制，一般为16M
 
 ```mysql
-create table tab_memory (a int, b int) engine=memory;
-show create table tab_memory;
+create table memory_test (a int, b int) engine=memory;
+show create table memory_test;
 tab_memory | CREATE TABLE `tab_memory` (
   `a` int(11) DEFAULT NULL,
   `b` int(11) DEFAULT NULL
