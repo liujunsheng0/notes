@@ -1,4 +1,4 @@
-​	MySQL从5.02版本后支持触发器的功能。触发器是与表有关的数据库对象，在满足定义条件时触发，并执行触发器中定义的语句集合。可用来协助应用在数据库端确保数据的完整性。
+	MySQL从5.02版本后支持触发器的功能。触发器是与表有关的数据库对象，在满足定义条件时触发，并执行触发器中定义的语句集合。可用来协助应用在数据库端确保数据的完整性。
 
 # 创建触发器
 
@@ -23,7 +23,7 @@ event: 触发事件, UPDATE|INSERT|DELETE
 > 触发器执行顺序：BEFORE触发器->行操作->AFTER触发器，任何一步操作发生错误都不会执行剩下的操作。如果是事务表进行操作，那么整个事务会回滚。
 
 ```mysql
-CREATE TABLE `base` (`name` varchar(20), `age` tinyint(4) PRIMARY KEY (`name`));
+CREATE TABLE `base` (`name` varchar(20), `age` tinyint(4), PRIMARY KEY (`name`));
 CREATE TABLE `base_log` (`dt` datetime, `name` varchar(20), `event` varchar(20));
 
 delimiter $$
@@ -55,18 +55,49 @@ BEGIN
 END $$
 
 delimiter ;
-INSERT INTO base VALUES("lilei", 15);
-INSERT INTO base VALUES("lilei", 15); # 错误， 主键重复，也不会触发触发器
+INSERT INTO base VALUES("lilei", 1);
+# INSERT INTO base VALUES("lilei", 1); # 错误， 主键重复，也不会触发触发器
+REPLACE INTO base VALUES("lilei", 2);
+INSERT INTO base VALUES ("lilei", 3) ON DUPLICATE KEY UPDATE age=3;  # 如果主键存在, 更新值
+INSERT IGNORE INTO base VALUES ("lilei", 3); #　如果主键存在, 忽略此次插入
+REPLACE INTO base VALUES("jack", 4);
 UPDATE base SET age=11;
-delete from base;
+DELETE FROM base;
 
 # base_log
-# 2019-07-28 17:51:26	lilei	insert before
-# 2019-07-28 17:51:26	lilei	insert after
-# 2019-07-28 17:51:26	lilei	update before
-# 2019-07-28 17:51:26	lilei	update after
-# 2019-07-28 17:51:26	lilei	delete before
-# 2019-07-28 17:51:26	lilei	delete after
+# INSERT INTO base VALUES("lilei", 1);
+# lilei	insert before
+# lilei	insert after
+
+# REPLACE INTO base VALUES("lilei", 2);
+# lilei	insert before
+# lilei	delete before
+# lilei	delete after
+# lilei	insert after
+
+# INSERT INTO base VALUES ("lilei", 3) ON DUPLICATE KEY UPDATE age=3; 
+# lilei	insert before
+# update before
+# update after
+
+# INSERT IGNORE INTO base VALUES ("lilei", 3);
+# lilei	insert before
+
+# REPLACE INTO base VALUES("jack", 3);
+# jack	insert before
+# jack	insert after
+
+# UPDATE 
+# jack	update before
+# jack	update after
+# lilei	update before
+# lilei	update after
+
+# DELETE
+# jack	delete before
+# jack	delete after
+# lilei	delete before
+# lilei	delete after
 ```
 
 
