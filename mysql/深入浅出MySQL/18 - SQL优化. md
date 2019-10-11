@@ -39,6 +39,13 @@ SHOW [SESSION | GLOBAL] STATUS;
 
 
 
+# 定位执行效率较低的SQL语句
+
++ 通过慢查询日志定位那些执行效率较低的SQL语句
++ 通过`SHOW PROCESSLIST`查看当前MySQL在进行的线程，包括线程的状态，是否锁表，可以实时查看SQL的执行情况
+
+
+
 # 通过EXPLAIN/DESC分析SQL
 
 ```mysql
