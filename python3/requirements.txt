@@ -6,3 +6,4 @@ nose
 tornado
 pyinotify
 schema
+configparser
