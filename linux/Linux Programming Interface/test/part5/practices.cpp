@@ -8,7 +8,7 @@
 void practice_2() {
     int fd = open("../data/5_2.txt", O_CREAT | O_RDWR | O_APPEND);
     if (fd == -1) {
-        errExit("open error");
+        Exit("open error");
     }
     // 虽然偏移到了文件起点, 但是还是会写入到文件末尾
     // 设置了O_APPEND后，不管偏移到哪, 都会在文件末尾写数据
@@ -26,7 +26,7 @@ void practice_2() {
     read(fd, buf, 1);
     printf("read2 = %s\n", buf);  // 文件起始处内容
     if (close(fd) == -1) {
-        errExit("close error");
+        Exit("close error");
     }
 }
 
@@ -38,7 +38,7 @@ void practice_6() {
     int fd2 = dup(fd1);
     int fd3 = open(file, O_RDWR);
     if (fd1 == -1 || fd3 == -1) {
-        errExit("open error");
+        Exit("open error");
     }
     printf("fd1=%d, fd2=%d, fd3=%d\n", fd1, fd2, fd3);
     write(fd1, "a", 1);     // a

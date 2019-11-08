@@ -6,7 +6,7 @@
 int main() {
     int fd = open("../data/test.txt", O_CREAT | O_RDONLY);
     if (fd == -1) {
-        errExit("open error");
+        Exit("open error");
     }
     int size = 100;
     int copy_fds[100];
@@ -14,7 +14,7 @@ int main() {
     for (int i = 0; i < size; i++) {
         copy_fds[i] = dup(fd);
         if (copy_fds[i] == -1) {
-            errExit("dup error &d", i);
+            Exit("dup error &d", i);
         }
         printf("fd = %d, copy_fd = %d\n", fd, copy_fds[i]);
     }

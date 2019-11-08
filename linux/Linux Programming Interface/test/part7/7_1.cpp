@@ -44,7 +44,7 @@ void memory() {
     for (int i = 0; i < buf_size; i++) {
         ptr[i] = (char*)malloc(block_size);
         if(ptr[i] == NULL) {
-            errExit("malloc error");
+            Exit("malloc error");
         }
     }
 

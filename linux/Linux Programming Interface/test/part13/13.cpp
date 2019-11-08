@@ -116,10 +116,10 @@ void setvbuf_test() {
 
     FILE* fp = fopen("../data/13_1.txt", "w+");
     if (fp == NULL) {
-        errExit("open error");
+        Exit("open error");
     }
     if (setvbuf(fp, buf, _IOFBF, buf_size) != 0) {
-        errExit("setvbuf error");
+        Exit("setvbuf error");
     }
     // 超过八个字节, 输出到文件
     char words[] = "12345678abcdef";
@@ -138,7 +138,7 @@ void setvbuf_test() {
     printf("buf=%s, read_buf=%s\n", buf, read_buf); // buf 由 abcdefgh->12345678
 
     if (fclose(fp) != 0) {
-        errExit("close error");
+        Exit("close error");
     }
 }
 
@@ -151,12 +151,12 @@ void setvbuf_test() {
 void test_write_read() {
     FILE* fp = fopen("../data/13_2.txt", "w+");
     if (fp == NULL) {
-        errExit("open error");
+        Exit("open error");
     }
     char buf[3] = {'a', 'b', '\0'};
     char read[3] = {'\0'};
     if (setvbuf(fp, buf, _IOFBF, 2) != 0) {
-        errExit("setvbuf error");
+        Exit("setvbuf error");
     }
     fwrite("1", 1, 1, fp);
     fwrite("2", 1, 1, fp);

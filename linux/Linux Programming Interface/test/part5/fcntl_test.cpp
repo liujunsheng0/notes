@@ -10,7 +10,7 @@ int main() {
     int flags, accessMode;
     flags = fcntl(fd, F_GETFL);
     if (flags == -1) {
-        errExit("fcntl error");
+        Exit("fcntl error");
     }
     if (flags & O_SYNC) {
         printf("writes are synchronized\n");

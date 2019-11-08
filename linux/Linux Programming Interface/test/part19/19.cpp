@@ -136,14 +136,14 @@ int main(int argc, char *argv[])
 
     inotifyFd = inotify_init();                 /* Create inotify instance */
     if (inotifyFd == -1)
-        errExit("inotify_init");
+        Exit("inotify_init");
 
     /* For each command-line argument, add a watch for all events */
 
     for (j = 1; j < size; j++) {
         wd = inotify_add_watch(inotifyFd, files[j], IN_ALL_EVENTS);
         if (wd == -1)
-            errExit("inotify_add_watch");
+            Exit("inotify_add_watch");
 
         printf("Watching %s using wd %d\n", files[j], wd);
     }
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
             fatal("read() from inotify fd returned 0!");
 
         if (numRead == -1)
-            errExit("read");
+            Exit("read");
 
         printf("Read %ld bytes from inotify fd\n", (long) numRead);
 

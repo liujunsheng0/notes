@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         close(fd);
     } else {
         if (errno != ENOENT) {          /* Failed for unexpected reason */
-            errExit("open");
+            Exit("open");
         } else {
             printf("[PID %ld] File \"%s\" doesn't exist yet\n", (long) getpid(), filename);
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
             fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
             if (fd == -1) {
-                errExit("open");
+                Exit("open");
             }
             printf("[PID %ld] Created file \"%s\" exclusively\n", (long) getpid(), filename);  /* MAY NOT BE TRUE! */
         }

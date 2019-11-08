@@ -47,7 +47,7 @@
 void stat_test() {
     struct stat statbuf;
     if (stat("../data/test.txt", &statbuf) == -1) {
-        errExit("stat error");
+        Exit("stat error");
     }
     printf("st_dev  =%d\n", statbuf.st_dev);
     printf("st_ino  =%d\n", statbuf.st_ino);
@@ -93,22 +93,22 @@ void utime_test() {
     struct stat st;
     const char *path = (char *) "../data/test.txt";
     if (-1 == stat(path, &st)) {
-        errExit("stat error");
+        Exit("stat error");
     }
     printf("st_atime=%d, st_mtime=%d\n", st.st_atime, st.st_mtime);
     if (-1 == utime(path, NULL)) {
-        errExit("utime error");
+        Exit("utime error");
     }
     if (-1 == stat(path, &st)) {
-        errExit("stat error");
+        Exit("stat error");
     }
 
     printf("st_atime=%d, st_mtime=%d\n", st.st_atime, st.st_mtime);
     if (-1 == utime(path, &ut)) {
-        errExit("utime error");
+        Exit("utime error");
     }
     if (-1 == stat(path, &st)) {
-        errExit("stat error");
+        Exit("stat error");
     }
     printf("st_atime=%d, st_mtime=%d\n", st.st_atime, st.st_mtime);
 }

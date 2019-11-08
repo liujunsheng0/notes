@@ -75,49 +75,12 @@ static void outputError(Boolean useErrnoMsg, int err, Boolean flushStdout, const
  * 获取所有的参数之后,我们有必要将这个 va_list实例args指针关掉,以免发生危险,方法是调用 va_end,将args置为NULL,
  * 应该养成获取完参数表之后关闭指针的习惯. 说白了,就是让程序具有健壮性.通常va_start和va_end是成对出现
  */
-void errMsg(const char* format, ...) {
-    va_list args;
-    int saveErrno = errno; // 防止以下调用中改变了errnno的值
-    va_start(args, format);
-    outputError(TRUE, errno, TRUE, format, args);
-    va_end(args);          // 将args置为NULL
 
-    errno = saveErrno;
-}
-
-void errExit(const char* format, ...) {
+void Exit(const char *format, ...) {
     va_list args;
     va_start(args, format);
     outputError(TRUE, errno, TRUE, format, args);
     va_end(args);
     terminate(TRUE);
 
-}
-
-void errExitEn(int err_num, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    outputError(TRUE, err_num, TRUE, format, args);
-    va_end(args);
-    terminate(TRUE);
-}
-
-void fatal(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    outputError(FALSE, 0, TRUE, format, args);
-    va_end(args);
-
-    terminate(TRUE);
-}
-
-void usageErr(const char* format, ...) {
-    va_list args;
-    fflush(stdout);
-    fprintf(stderr, "usage:");
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fflush(stderr);
-    exit(EXIT_FAILURE);
 }

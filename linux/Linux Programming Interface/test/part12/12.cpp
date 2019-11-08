@@ -44,7 +44,7 @@ void uname_a() {
     struct utsname uts;
 
     if (uname(&uts) == -1)
-        errExit("uname");
+        Exit("uname");
 
     printf("Node name:   %s\n", uts.nodename);
     printf("System name: %s\n", uts.sysname);
