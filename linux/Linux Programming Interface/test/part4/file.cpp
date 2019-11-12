@@ -1,3 +1,5 @@
+// Linux系统编程手册 第四章 文件I/O: 通用的I/O模型
+
 #include <stdlib.h>
 #include <iostream>
 #include <unistd.h>

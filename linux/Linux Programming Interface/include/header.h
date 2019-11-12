@@ -19,7 +19,7 @@
 #include <errno.h>       // 包含了全局变量errno, 值为错误的具体类型
                          // 使用errno原因, C函数返回值只有一个, 如果返回类型为void*, 只知道发生了错误, 但是并不知道错误的具体原因
 #include <string.h>
-
+#include <string>
 typedef enum {FALSE, TRUE} Boolean;
 
 typedef unsigned int uint;
