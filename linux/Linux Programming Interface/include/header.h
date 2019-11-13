@@ -6,6 +6,10 @@
 #ifndef HEADER_H
 #define HEADER_H
 
+#ifndef BUF_SIZE
+#define BUF_SIZE 100
+#endif // ifndef BUF_SIZE
+
 #include <sys/stat.h>    // unix/linux系统定义文件状态的文件, 里面的函数可以返回一个结构，里面包括文件的全部属性
                          // stat = display file or file system status
 #include <sys/types.h>   // 基本系统数据类型

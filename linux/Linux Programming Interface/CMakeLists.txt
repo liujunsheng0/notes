@@ -17,12 +17,10 @@ add_executable(4 test/part4/file.cpp ${SRC})
 add_executable(5 test/part5/5.cpp ${SRC})
 
 # 第六章
-set(6_1_FILE test/part6/6_2.cpp)
-add_executable(6_2_pid_and_ppid ${6_1_FILE})
+add_executable(6 test/part6/6_2.cpp)
 
 # 第七章
-set(7_1_FILE test/part7/7_1.cpp)
-add_executable(7_1_memory ${7_1_FILE})
+add_executable(7 test/part7/7.cpp)
 
 # 第10章
 set(10_FILE test/part10/10.cpp)
@@ -33,8 +31,7 @@ set(12_FILE test/part12/12.cpp)
 add_executable(12_proc ${12_FILE})
 
 # 第13章
-set(13_FILE test/part13/13.cpp ${SRC})
-add_executable(13_cache_io ${13_FILE})
+add_executable(13 test/part13/13.cpp ${SRC})
 
 # 第15章
 set(15_FILE test/part15/15.cpp ${SRC})
