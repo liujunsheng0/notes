@@ -17,9 +17,12 @@ class Node(object):
         self.next: Node = next_  # 后面的节点
 
 
-# from cachetools import LRUCache中未使用双向链表而是orderDict
 class LruCache(object):
-    """ dict + 双向链表实现LRU, get/set的时间复杂度为O(1) """
+    """ 
+    dict + 双向链表实现LRU, get/set的时间复杂度为O(1)
+    
+    from cachetools import LRUCache 中使用的是orderDict
+    """
 
     def __init__(self, max_size=10):
         self.cache: Dict[Any, Node] = {}
