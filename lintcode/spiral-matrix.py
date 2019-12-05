@@ -26,28 +26,28 @@ class Solution:
         if n < 1:
             return []
         l, r, u, d = 0, n - 1, 0, m - 1
-        visited = set()
         ans = []
+
         while l <= r and u <= d:
+            # ->
             for i in range(l, r + 1):
-                if (u, i) not in visited:
-                    ans.append(matrix[u][i])
-                    visited.add((u, i))
+                ans.append(matrix[u][i])
             u += 1
+
+            # ↓
             for i in range(u, d + 1):
-                if (i, r) not in visited:
-                    ans.append(matrix[i][r])
-                    visited.add((i, r))
+                ans.append(matrix[i][r])
             r -= 1
-            for i in range(r, l - 1, -1):
-                if (d, i) not in visited:
+
+            # <-
+            if u <= d:  # 说明此层未被遍历
+                for i in range(r, l - 1, -1):
                     ans.append(matrix[d][i])
-                    visited.add((d, i))
             d -= 1
-            for i in range(d, u - 1, -1):
-                if (i, l) not in visited:
+            # ↑
+            if l <= r:  # 说明此层未被遍历
+                for i in range(d, u - 1, -1):
                     ans.append(matrix[i][l])
-                    visited.add((i, l))
             l += 1
         # end while
         return ans
