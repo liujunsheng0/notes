@@ -17,36 +17,28 @@ class Solution:
     @param: dict: A dictionary of words dict
     @return: A boolean
     """
-    def wordBreak(self, s, dicts):
+    def wordBreakTimeOut(self, s, dicts):
         """ DFS 内存超出限制 """
         if not s:
             return True
         for i in dicts:
-            if s.startswith(i) and self.wordBreak(s[len(i):], dicts):
+            if s.startswith(i) and self.wordBreakTimeOut(s[len(i):], dicts):
                 return True
         return False
 
-    def wordBreak2(self, s, dicts):
-        if not s:
-            return True
+    def wordBreak(self, s, words):
         size = len(s)
-        # dp[i] == True 表示 s中0~i是可以由dicts中的单词组成的
         dp = [False] * (size + 1)
         dp[0] = True
-        for idx, v in enumerate(dp):
-            if not v:
-                continue
-            for w in dicts:
-                tmp = len(w)
-                if w == s[idx: idx + tmp]:
-                    dp[idx + tmp] = True
-            # end for
-        # end for
+        for i in range(1, size + 1):
+            for w in words:
+                w_size = len(w)
+                if i - w_size >= 0 and s[i - w_size: i] == w:
+                    dp[i] = dp[i] or dp[i - w_size]
         return dp[-1]
 
-print(Solution().wordBreak("abcdadada", ["a", "d", "c", "b"]))
-print(Solution().wordBreak2("abcdadada", ["a", "d", "c", "b"]))
 
+print(Solution().wordBreak("abcdadada", ["a", "d", "c", "b"]))
 
 """
 描述 https://www.lintcode.com/problem/word-break-ii/description
@@ -54,39 +46,39 @@ print(Solution().wordBreak2("abcdadada", ["a", "d", "c", "b"]))
 给一字串lintcode,字典为["de", "ding", "co", "code", "lint"] 则结果为["lint code", "lint co de"]
 """
 
-# TODO: 未AC
+
 class Solution:
     """
     @param: s: A string
     @param: wordDict: A set of words.
     @return: All possible sentences.
     """
-    def wordBreak(self, s, wordDict):
-        """内存超出限制"""
-        if not s:
-            return True
+    def wordBreak(self, s: str, words: list):
         size = len(s)
-        # dp[i] == True 表示 s中0~i是可以由dicts中的单词组成的
-        dp = [[False, []] for _ in range(size + 1)]
-        dp[0][0] = True
-        for idx, (v, path) in enumerate(dp):
-            if not v:
-                continue
-            for w in wordDict:
-                tmp = len(w)
-                if w == s[idx: idx + tmp]:
-                    dp[idx + tmp][0] = True
-                    dp[idx + tmp][1] += [i + [w] for i in path] if path else [[w]]
-                # end if
-            # end for
-        # end for
-        return [" ".join(i) for i in dp[-1][-1]]
+        dp = [False] * (size + 1)
+        dp[0] = True
+        combine = [[] for _ in range(size + 1)]  # 记录组合
+        for i in range(1, size + 1):
+            for w in words:
+                w_size = len(w)
+                if i - w_size >= 0 and s[i - w_size: i] == w and dp[i - w_size]:
+                    dp[i] = True
+                    combine[i].append((i - w_size, w))
 
-print(Solution().wordBreak("abcdadada", ["a", "d", "c", "b"]))
-print(Solution().wordBreak("lintcode", ["de","ding","co","code","lint"]))
-print(Solution().wordBreak("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                           ["a","aa","aaa","aaaa","aaaaa","aaaaaa","aaaaaaa","aaaaaaaa","aaaaaaaaa","aaaaaaaaaa"]))
+        return self.dfs(combine, -1, [""])
 
+    def dfs(self, combine, index, res):
+        if index == 0:
+            return res
+        ans = []
+        for idx, word in combine[index]:
+            ans += self.dfs(combine, idx, ["%s %s" % (word, i) if i else word for i in res])
+        return ans
+
+
+print(Solution().wordBreak("lintcode", ["de", "ding", "co", "code", "lint"]))
+r = Solution().wordBreak("aaaa", ["a", "aa", "aaa", "aaaa"])
+print(len(r), r)
 
 
 """
@@ -112,7 +104,6 @@ class Solution:
     @param: : A set of word
     @return: the number of possible sentences.
     """
-
     def wordBreak3(self, s: str, words: list):
         s = s.lower()
         words = set([i.lower() for i in words])
@@ -138,16 +129,11 @@ class Solution:
             for w in words:
                 w_size = len(w)
                 if i - w_size >= 0 and s[i - w_size: i] == w:
-                    # 子串的拼法组合而成
                     dp[i] += dp[i - w_size]
         return dp[-1]
 
 
-#
-words = ["a","aa","aaa","aaaa","aaaaa","aaaaaa","aaaaaaa","aaaaaaaa","aaaaaaaaa","aaaaaaaaaa"]
-# 84675106
-# 265816832
-print(Solution().wordBreak3("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa", words) == 265816832)
-
-words = ["Cat", "mat", "Ca", "tm", "at", "C", "Dog", "og", "Do"]
-print(Solution().wordBreak3("Catmat", words))
+words_ = ["Cat", "mat", "Ca", "tm", "at", "C", "Dog", "og", "Do"]
+print(Solution().wordBreak3("Catmat", words_) == 3)
+words_ = ["a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa", "aaaaaaa", "aaaaaaaa", "aaaaaaaaa", "aaaaaaaaaa"]
+print(Solution().wordBreak3("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa", words_) == 265816832)
